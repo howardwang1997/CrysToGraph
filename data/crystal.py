@@ -20,7 +20,6 @@ from pymatgen.io.cif import CifParser
 
 import torch
 from torch_geometric.data import Data, Dataset
-import dgl
 
 from atom import AtomVocab, EmptyAtomVocab
 from graph_utils import laplacian_positional_encoding as lpe
