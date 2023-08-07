@@ -161,4 +161,67 @@ def prepare_line_graph_batch(
         t.to(device, non_blocking=non_blocking),
     )
 
-    return batch 
+    return batch
+
+def compute_bond_cosines(edges):
+    """
+    from alignn.graphs
+    """
+    r1 = -edges.src['r']
+    r2 = edges.dst['r']
+    bot = (
+        torch.norm(r1, dim=1) * torch.norm(r2, dim=1)
+    )
+
+    if (bot == 0).sum() > 0: bot += 0.0001
+    bond_cosine = torch.sum(r1 * r2, dim=1) / bot
+
+    bond_cosine = torch.clamp(bond_cosine, -1, 1)
+    return {'h': bond_cosine}
+
+def detect_radius(structure, max_nbr=12, min_radius=2, max_radius=8, step=0.1):
+    """
+    implemented on 22/06/2023, debuged and more efficient
+    """
+    m = []
+    nsp = len(structure.species)
+    for i in range(int(min_radius/step), int(max_radius/step)):
+        n = structure.get_all_neighbors(i*step, include_index=True)
+        l = [len(n[j]) for j in range(nsp)]
+        if max(l) > max_nbr:
+            break
+        m.append(max(l))
+
+    radius = min_radius + (len(m) - 1) * step
+    return radius
+
+def convert_spherical(euclidean):
+    if len(euclidean.shape) == 1:
+        x, y, z = euclidean[0], euclidean[1], euclidean[2]
+        r = torch.sqrt(x**2 + y**2 + z**2)
+        if r == 0:
+            r = 0.001
+        if x == 0:
+            x = 0.001
+        theta = torch.arccos(z / r)
+        phi = torch.arctan(y / x)
+        out = torch.tensor([r, theta, phi])
+    elif len(euclidean.shape) == 2:
+        cuda = torch.cuda.is_available()
+        device = euclidean.device
+        if cuda:
+            euclidean = euclidean.cuda()
+        x, y, z = euclidean[:,0], euclidean[:,1], euclidean[:,2]
+        r = torch.sqrt(x**2 + y**2 + z**2)
+        if 0 in r or 0 in x:
+            for i in range(len(r)):
+                if r[i] == 0:
+                    r[i] = 0.001
+                if x[i] == 0:
+                    x[i] = 0.001
+        theta = torch.arccos(z / r)
+        phi = torch.arctan(y / x)
+        out = torch.vstack([r, theta, phi])
+        out = out.T.to(device)
+
+    return out
