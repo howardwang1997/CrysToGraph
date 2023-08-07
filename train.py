@@ -269,7 +269,34 @@ class GraphConvPretraining():
         torch.save(self.model.state_dict(), path)
 
 
-class MixedTargetGraphConvPretrainingWithDGL(MixedTargetGraphConvPretraining):
+class MixedTargetGraphConvPretrainingWithDGL():
+    def __init__(self, model, cuda=True, shuffle=False, random_seed=None):
+        self.batch_time = AverageRecorder()
+        self.data_time = AverageRecorder()
+        self.losses = AverageRecorder()
+        self.shuffle = shuffle
+        self.random_seed = random_seed
+
+        self.cuda = cuda and torch.cuda.is_available()
+        self.model = model
+        if self.cuda:
+            self.model = model.cuda()
+
+    def _step(self, inputs):
+        if self.cuda:
+            inputs = inputs.cuda()
+        outputs = self.model(inputs)
+        return outputs
+
+    def _calc_loss(self, outputs):
+        return self.criterion(outputs[0], outputs[1])
+
+    def _make_target(self, targets, n_class=2):
+        new = torch.zeros((len(targets), n_class))
+        for i in range(len(targets)):
+            new[i, targets[i]] = 1
+        return new
+
     def train(self, mixed_train_loader, criterion, optimizer, epochs, scheduler=None, verbose_freq: int=100, grad_accum: int=1):
         self.model.train()
         self.criterion = criterion
@@ -335,3 +362,34 @@ class MixedTargetGraphConvPretrainingWithDGL(MixedTargetGraphConvPretraining):
             self.loss_list.append(loss_list)
             self.save_model()
 
+    def verbose(self, epoch, i, total):
+        print('Epoch: [{0}][{1}/{2}]\t'
+              'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+              'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+              'Loss {loss.val:.4f} ({loss.avg:.4f})\t'.format(
+            epoch, i, total, batch_time=self.batch_time,
+            data_time=self.data_time, loss=self.losses)
+        )
+
+    def save_model(self, path=''):
+        if path == '':
+            if not hasattr(self, 'save_model_index'):
+                names = list(filter(lambda name: 'model' in name, os.listdir('config/')))
+                names = [x.split('.')[0] for x in names]
+                names = list(filter(lambda name: name[:5] == 'model', names))
+                names = list(filter(lambda name: len(name) > 5, names))
+                index = max([int(x[5:]) for x in names]) + 1
+                self.save_model_index = index
+            path = 'config/model%d.tsd' % self.save_model_index
+        torch.save(self.model.state_dict(), path)
+
+
+    def load_model(self, path=''):
+        if path == '':
+            path = 'config/model.tch'
+        return torch.load(path)
+
+    def save_state_dict(self, path=''):
+        if path == '':
+            path = 'config/model.tsd'
+        torch.save(self.model.state_dict(), path)
