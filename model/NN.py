@@ -312,7 +312,7 @@ class Finetuning(nn.Module):
             
         self.gf = [GaussianFilter(0, 8, 0.2),
                    GaussianFilter(0, 3.2, 0.2),
-                   GaussianFilter(-1.6, 1.6, 0.2),
+                   GaussianFilter(-3.2, 3.2, 0.4),
                    GaussianFilter(-1.4, 1.5, 0.1)]
 
         self.embeddings_to_hidden = nn.Linear(atom_fea_len, h_fea_len)

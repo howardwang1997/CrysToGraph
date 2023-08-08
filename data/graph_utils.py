@@ -204,7 +204,7 @@ def convert_spherical(euclidean):
         if x == 0:
             x = 0.001
         theta = torch.arccos(z / r)
-        phi = torch.arctan(y / x)
+        phi = torch.atan2(y, x)
         out = torch.tensor([r, theta, phi])
     elif len(euclidean.shape) == 2:
         cuda = torch.cuda.is_available()
@@ -220,7 +220,7 @@ def convert_spherical(euclidean):
                 if x[i] == 0:
                     x[i] = 0.001
         theta = torch.arccos(z / r)
-        phi = torch.arctan(y / x)
+        phi = torch.atan2(y, x)
         out = torch.vstack([r, theta, phi])
         out = out.T.to(device)
 
