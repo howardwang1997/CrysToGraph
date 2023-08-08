@@ -114,10 +114,10 @@ class MultiHeadAttentionLayer(MessagePassing):
                              edge_attr=edge_attr, size=None)
         if self.edge_dim is not None:
             self.edge_attr = self.edge_attr.view(-1, self.heads * self.d_k)
-            self.edge_attr = self.LNE(self.FCE(self.edge_attr) + edge_attr)
+            self.edge_attr = self.LNE(self.FCE(self.edge_attr)) + edge_attr
 
         out = out.view(-1, self.heads * self.d_k)
-        out = self.LNN(self.FCN(out) + x)
+        out = self.LNN(self.FCN(out)) + x
         
         return out, self.edge_attr
         

@@ -44,7 +44,7 @@ class GlobalTransformerLayer(MessagePassing):
                 ):
         """
         """
-        kwargs.setdefault('aggr', 'mean')
+        kwargs.setdefault('aggr', 'add')
         super().__init__(node_dim=0, **kwargs)
         
         self.d_model = in_channels
@@ -177,7 +177,6 @@ class GlobalTransformerLayer(MessagePassing):
         
     def message(self,
                x_i: Tensor,
-               x_j: Tensor,
                edge_attr: Tensor):
         return edge_attr + 0 * x_i
     
