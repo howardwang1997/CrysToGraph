@@ -44,7 +44,7 @@ class GlobalTransformerLayer(MessagePassing):
                 ):
         """
         """
-        kwargs.setdefault('aggr', 'add')
+        kwargs.setdefault('aggr', 'mean')
         super().__init__(node_dim=0, **kwargs)
         
         self.d_model = in_channels
