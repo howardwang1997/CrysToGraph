@@ -543,34 +543,3 @@ class Finetuning(nn.Module):
         return padded
 
     
-def nn_convs(channels, dim, layers=3, nn_layers=None, aggr='add', root_weight=True, bias=True):
-    if nn_layers is None:
-        nns = nn.Seqential(nn.Linear(channels, channels),
-                          nn.ReLU(),
-                          nn.Linear(channels, channels * dim))
-        
-#         nns = nn.ModuleList([nn.Linear(channels, channels * dim)
-#                             for _ in range(layers)])
-    else:
-        nns = nn_layers
-    nnc = nn.ModuleList([tgnn.NNConv(channels, channels, nns, aggr, root_weight, bias)
-                         for _ in range(layers)])
-    
-#     nnc = nn.ModuleList([tgnn.NNConv(channels, channels, nns[_], aggr, root_weight, bias)
-#                          for _ in range(layers)])
-    return nnc
-
-def gatv2_convs(channels, dim, layers=3, dropout=0.0, 
-                heads=1, concat=True, negative_slope=0.2, add_self_loops=True, 
-                fill_value='Mean', bias=True, share_weights=False):
-    gvc = nn.ModuleList([tgnn.GATv2Conv(channels, channels, heads, concat, negative_slope,
-                                        dropout, add_self_loops, dim, fill_value, bias, share_weights)
-                       for _ in range(layers)])
-    return gvc
-
-def transformer_convs(channels, dim, layers=3, droupout=0.0,
-                     heads=1, concat=True, beta=False, bias=True, root_weight=True):
-    tfc = nn.ModuleList([tgnn.TransformerConv(channels, channels, heads, concat, beta, 
-                                              dropout, dim, bias, root_weight)
-                         for _ in range(layers)])
-    return tfc
