@@ -119,7 +119,7 @@ class MultiHeadAttentionLayer(MessagePassing):
         out = out.view(-1, self.heads * self.d_k)
         out = self.LNN(self.FCN(out) + x)
         
-        return out, edge_attr
+        return out, self.edge_attr
         
     def message(self, Q_i: Tensor, K_i: Tensor, K_j: Tensor, V_i: Tensor, V_j: Tensor,
                 edge_attr: OptTensor, index: Tensor, ptr: OptTensor,
