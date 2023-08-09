@@ -413,7 +413,7 @@ class Finetuning(nn.Module):
             atom_fea, nbr_fea = self.mp(self.convs[idx], self.line_convs[idx], 
                      atom_fea, nbr_fea_idx, nbr_fea, line_fea_idx, line_fea, idx)
         if hasattr(self, 'bn'):
-            atom_fea = self.ln(atom_fea)
+            atom_fea = self.bn(atom_fea)
             nbr_fea = self.bne(nbr_fea)
 
         atom_fea = atom_fea + pe
@@ -429,7 +429,7 @@ class Finetuning(nn.Module):
         if contrastive:
             crys_fea_c = self.conv_to_fc_softplus(crys_fea)
             out_c = self.contr_out(crys_fea_c)
-#         if hasattr(self, 'bn'): crys_fea = self.bn(crys_fea)
+        if hasattr(self, 'ln'): crys_fea = self.ln(crys_fea)
 
         for fc, sp in zip(self.fcs, self.softpluses):
             crys_fea = sp(crys_fea)
