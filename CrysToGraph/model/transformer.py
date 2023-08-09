@@ -75,8 +75,8 @@ class GlobalTransformerLayer(MessagePassing):
                                        bias=True, weight_initializer='glorot')
         
         self.L_O = nn.Linear(self.heads * self.d_k, self.d_model, bias=True)
-        self.BNN1 = nn.LayerNorm(self.d_model)
-        self.BNN2 = nn.LayerNorm(self.d_model)
+        self.LNN1 = nn.LayerNorm(self.d_model)
+        self.LNN2 = nn.LayerNorm(self.d_model)
         
         self.FCN1 = nn.Linear(self.d_model, 2*self.d_model)
         self.FCN2 = nn.Linear(2*self.d_model, self.d_model)
@@ -91,8 +91,8 @@ class GlobalTransformerLayer(MessagePassing):
         self.W_K.reset_parameters()
         self.L_O.reset_parameters()
         
-        self.BNN1.reset_parameters()
-        self.BNN2.reset_parameters()
+        self.LNN1.reset_parameters()
+        self.LNN2.reset_parameters()
         
         self.FCN1.reset_parameters()
         self.FCN2.reset_parameters()
@@ -113,7 +113,7 @@ class GlobalTransformerLayer(MessagePassing):
         
         assert x.dim() == 2
 
-#         edge_embediings as positional encoding
+#         edge embeddings as positional encoding
         e = self.embed_edge(edge_attr) if self.incorp_edge else None
 
 #         with no self loop
@@ -146,14 +146,14 @@ class GlobalTransformerLayer(MessagePassing):
         h = V.transpose(0,1).contiguous().view(n_nodes, self.heads * self.d_k)
         h = self.L_O(h) # h shaped as x
         
-        h = self.BNN1(h)
+        h = self.LNN1(h)
         if self.residual: h = h + x
         x = h
         
         h = self.FCN1(h)
         h = self.drop_n(gelu(h))
         h = self.FCN2(h)
-        h = self.BNN2(h)
+        h = self.LNN2(h)
         if self.residual: h = h + x
         
         if self.biased:

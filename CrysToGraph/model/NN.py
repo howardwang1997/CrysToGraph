@@ -367,13 +367,12 @@ class Finetuning(nn.Module):
         self.softpluses = nn.ModuleList([nn.Softplus()
             for _ in range(n_fc-1)])
         self.fc_out = nn.Linear(h_fea_len, 1, bias=True)
-        self.actv = nn.LeakyReLU()
         self.fin_sp = nn.Softplus()
 
         if norm:
             self.ln = nn.LayerNorm(h_fea_len)
             self.bn = nn.BatchNorm1d(h_fea_len)
-        self.sigm = nn.Sigmoid()
+            self.bne = nn.BatchNorm1d(nbr_fea_len)
         self.drop = nn.Dropout(drop)
         
     def forward(self, data, contrastive=True):
@@ -413,22 +412,16 @@ class Finetuning(nn.Module):
 #            pass
             atom_fea, nbr_fea = self.mp(self.convs[idx], self.line_convs[idx], 
                      atom_fea, nbr_fea_idx, nbr_fea, line_fea_idx, line_fea, idx)
-        if hasattr(self, 'bn'): atom_fea = self.ln(atom_fea)
+        if hasattr(self, 'bn'):
+            atom_fea = self.ln(atom_fea)
+            nbr_fea = self.bne(nbr_fea)
 
         atom_fea = atom_fea + pe
         atom_fea = self.conv_sp(self.gt(self.global_transformer, atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea))
         atom_fea = self.conv_sp(self.gt(self.global_transformer_2, atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea))
 #        atom_fea = self.conv_sp(self.gt(self.global_transformer_3, atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea))
 
-        if self.pooling_method == 'conventional':
-            crys_fea = self.global_mean_pooling(atom_fea, crystal_atom_idx)
-        elif self.pooling_method == 'attention':
-            crys_fea = self.global_attention_pooling(atom_fea, crystal_atom_idx)
-        elif self.pooling_method == 'exotic':
-            crys_fea = self.exotic_pooling(atom_fea, crystal_atom_idx, nbr_fea_idx,
-                                           method=self.pooling, pooling_dim=self.pooling_dim, edge_attr = nbr_fea)
-#             crys_fea = torch.vstack([self.pooling_fc(crys_fea[i:i+self.pooling_dim, :].T).T
-#                                      for i in range(min(crystal_atom_idx), max(crystal_atom_idx)+1)])
+        crys_fea = tgnn.pool.global_mean_pool(atom_fea, crystal_atom_idx)
         
         crys_fea = self.conv_to_fc_softplus(crys_fea)
         crys_fea = self.conv_to_fc(crys_fea)
@@ -460,86 +453,3 @@ class Finetuning(nn.Module):
 
     def gt(self, gt_layer, atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea):
         return gt_layer(atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea)
-
-    def global_mean_pooling(self, atom_fea, crystal_atom_idx, **kwargs):
-        idxs = [i for i in range(int(min(crystal_atom_idx)), int(max(crystal_atom_idx)+1))]
-        idx_count = torch.bincount(crystal_atom_idx)[min(crystal_atom_idx): max(crystal_atom_idx+1)]
-        idx = [[idxs[i]]*idx_count[i] for i in range(len(idxs))]
-
-        idxx = []
-        idxx = iinidx = 0
-        for i in range(len(atom_fea)):
-            idx[idxx][iinidx] = i
-            iinidx += 1
-            if iinidx  == idx_count[idxx]:
-                iinidx = 0
-                idxx += 1
-
-        summed_fea = [torch.mean(atom_fea[idx_map], dim=0, keepdim=True)
-                      for idx_map in idx]
-        return torch.cat(summed_fea, dim=0)
-
-    def get_batch(self, atom_fea, crystal_atom_idx, **kwargs):
-        idxs = [i for i in range(int(min(crystal_atom_idx)), int(max(crystal_atom_idx)+1))]
-        idx_count = torch.bincount(crystal_atom_idx)[min(crystal_atom_idx): max(crystal_atom_idx+1)]
-        idx = [[idxs[i]]*idx_count[i] for i in range(len(idxs))]
-
-        idxx = []
-        idxx = iinidx = 0
-        for i in range(len(atom_fea)):
-            idx[idxx][iinidx] = i
-            iinidx += 1
-            if iinidx  == idx_count[idxx]:
-                iinidx = 0
-                idxx += 1
-
-        return idxx
-    
-    def exotic_pooling(self, atom_fea, crystal_atom_idx, edge_index, 
-                       method='SAG', pooling_dim=10, edge_attr:OptTensor=None):
-        method = method.lower()
-        assert method in ['sag', 'topk']
-        if method == 'sag':
-            pooler = tgnn.SAGPooling(in_channels=atom_fea.shape[-1], ratio=pooling_dim)
-        else:
-            pooler = tgnn.TopKPooling(in_channels=atom_fea.shape[-1], ratio=pooling_dim)
-        
-        atom_fea = pooler(x=atom_fea, edge_index=edge_index, edge_attr=edge_attr, batch=crystal_atom_idx)[0]
-#        atom_fea = self._padding(atom_fea, pooling_dim, crystal_atom_idx)
-        atom_fea = self._mean(atom_fea, pooling_dim, crystal_atom_idx)
-        return atom_fea
-
-    def _mean(self, x, dim, crystal_atom_idx):
-        idxs = [i for i in range(min(crystal_atom_idx), max(crystal_atom_idx)+1)]
-        idx_count = torch.bincount(crystal_atom_idx)[min(crystal_atom_idx): max(crystal_atom_idx+1)]
-        idx = [[idxs[i]]*idx_count[i] for i in range(len(idxs))]
-        idx = []
-        for i in range(len(idxs)):
-            if idx_count[i] < dim:
-                count = idx_count[i]
-            else:
-                count = dim
-            idx.append([idxs[i]] * count)
-        summed_fea = [torch.mean(x[idx_map], dim=0, keepdim=True)
-                      for idx_map in idx]
-        return torch.cat(summed_fea, dim=0)
-
-    def _padding(self, x, dim, crystal_atom_idx):
-        maximum = max(crystal_atom_idx)
-        minimum = min(crystal_atom_idx)
-        batch_size = maximum - minimum + 1
-        padded = torch.zeros((batch_size * dim, x.shape[-1])).to(x.device)
-        
-        idx_count = torch.bincount(crystal_atom_idx)[minimum: maximum + 1]
-        sum_atoms = 0
-        for i in range(batch_size):
-            if idx_count[i] >= dim:
-                idx_count[i] = dim
-                padded[i * dim: (i + 1) * dim] = x[sum_atoms: sum_atoms + dim]
-            else:
-                padded[i * dim: i * dim + idx_count[i]] = x[sum_atoms: sum_atoms + idx_count[i]]
-            sum_atoms += idx_count[i]
-            
-        return padded
-
-    
