@@ -370,7 +370,7 @@ class Finetuning(nn.Module):
         self.fin_sp = nn.Softplus()
 
         if norm:
-            self.ln = nn.LayerNorm(h_fea_len)
+            self.ln_fc = nn.LayerNorm(h_fea_len)
             self.bn = nn.BatchNorm1d(h_fea_len)
             self.bne = nn.BatchNorm1d(nbr_fea_len)
         self.drop = nn.Dropout(drop)
@@ -429,7 +429,7 @@ class Finetuning(nn.Module):
         if contrastive:
             crys_fea_c = self.conv_to_fc_softplus(crys_fea)
             out_c = self.contr_out(crys_fea_c)
-        if hasattr(self, 'ln'): crys_fea = self.ln(crys_fea)
+        if hasattr(self, 'bn'): crys_fea = self.ln_fc(crys_fea)
 
         for fc, sp in zip(self.fcs, self.softpluses):
             crys_fea = sp(crys_fea)
