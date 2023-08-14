@@ -143,9 +143,9 @@ class CrystalDataset(Dataset):
         self.min_atoms = min_atoms
     
         if raw_dir[-1] != '/':
-            raw_dir = '%s/' % self.raw_dir
+            raw_dir = '%s/' % raw_dir
         if processed_dir[-1] != '/':
-            processed_dir = '%s/' % self.processed_dir
+            processed_dir = '%s/' % processed_dir
         if names is None:
             self.length = len(os.listdir(self.raw_dir))
             self.names = ['%d.cif' % i for i in range(self.length)]
