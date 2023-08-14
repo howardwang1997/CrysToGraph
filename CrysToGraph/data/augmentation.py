@@ -5,12 +5,12 @@ from tqdm import tqdm
 import torch
 import dgl
 
-from crystal import compute_bond_cosines, convert_spherical
+from .graph_utils import compute_bond_cosines, convert_spherical
 
 import pymatgen
 from pymatgen.core import Lattice, Structure, Molecule, Species
 
-from crystal import Crystal, detect_radius
+from .crystal import Crystal, detect_radius
 
 
 class Augmentation:

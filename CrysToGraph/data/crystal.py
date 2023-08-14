@@ -15,11 +15,11 @@ from pymatgen.io.cif import CifParser
 import torch
 from torch_geometric.data import Data, Dataset
 
-from atom import EmptyAtomVocab
-from graph_utils import laplacian_positional_encoding as lpe
-from graph_utils import random_walk_positional_encoding as rwpe
-from graph_utils import prepare_line_graph_batch
-from graph_utils import compute_bond_cosines, detect_radius, convert_spherical
+from .atom import EmptyAtomVocab
+from .graph_utils import laplacian_positional_encoding as lpe
+from .graph_utils import random_walk_positional_encoding as rwpe
+from .graph_utils import prepare_line_graph_batch
+from .graph_utils import compute_bond_cosines, detect_radius, convert_spherical
     
     
 class Crystal:

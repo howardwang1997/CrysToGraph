@@ -24,7 +24,7 @@ from torch_geometric.utils import (
     softmax,
 )
 
-from model_utils import tg_batch_to_batch_edge_index
+from .model_utils import tg_batch_to_batch_edge_index
 
 
 def gelu(x):
