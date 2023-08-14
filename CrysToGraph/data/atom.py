@@ -57,7 +57,7 @@ class AtomVocab:
             self.numbers = sorted(self.numbers)
             return self._update(self.numbers)
         else:
-            warnings.warn('Atom %s exist in the AtomVocab! Not added!' % element(a_add).names)
+            warnings.warn('Atom %s exist in the AtomVocab! Not added!' % element(a_add).symbol)
             return self
     
     def delete_atom(self, atom):
@@ -70,7 +70,7 @@ class AtomVocab:
             self.numbers.remove(a_del)
             return self._update(self.numbers)
         else:
-            warnings.warn('Atom %s not exist in the AtomVocab! Not deleted!' % element(a_del).names)
+            warnings.warn('Atom %s not exist in the AtomVocab! Not deleted!' % element(a_del).symbol)
             return self
     
     def generate_embeddings(self, embedding_dim, mask_token=True):

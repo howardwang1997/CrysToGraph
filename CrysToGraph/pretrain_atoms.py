@@ -20,20 +20,16 @@ from pretrain import AtomRepresentationPretraining, Normalizer
 
 # make dir and get data from matbench
 try:
-    os.mkdir('/home/howardwang/Documents/crystal_dataset')
-    os.mkdir('crystal_dataset/raw')
-    os.mkdir('crystal_dataset/processed')
+    os.mkdir('/home/howardwang/Documents/datasets/overall/')
+    os.mkdir('/home/howardwang/Documents/datasets/overall/raw/')
+    os.mkdir('/home/howardwang/Documents/datasets/overall/processed/')
 except FileExistsError:
     pass
 
-data_root = './crystal_dataset/'
-data_name = 'matbench_mp_e_form.json'
-
-# Read processed dataset
-cd = crystal.load_dataset()
+data_root = '/home/howardwang/Documents/datasets/overall/'
 
 # start the pretraining
-atom_fea_len = 9
+atom_fea_len = 64
 nbr_fea_len = cd.get_crystal(0).graph.edge_attr.shape[1] # add the attr!
 
 model = nn.ModuleList([tgnn.CGConv(channels=32,
