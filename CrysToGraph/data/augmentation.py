@@ -10,26 +10,26 @@ from crystal import compute_bond_cosines, convert_spherical
 import pymatgen
 from pymatgen.core import Lattice, Structure, Molecule, Species
 
-from crystal import Crystal, CrystalDataset, detect_radius
+from crystal import Crystal, detect_radius
+
 
 class Augmentation:
-    def __init__(self, crystal_dataset, to_simple=False):
+    def __init__(self, crystal_dataset):
         """
         mask token is set as element(118), 'Og'
         """
         self.cd = crystal_dataset
         self.av = self.cd.atom_vocab
         self.length = self.cd.len()
-        self.to_simple = to_simple
         if self.length == 0:
             raise ValueError('Please use processed crystal dataset!')
         self.processed = self.cd.processed_file_names
         
     def mask_atom(self, ratio=0.15, mask_rate=0.8, random_rate=0.1, minimum=8, suffix='am',
-                  max_nbr=8, max_radius=6, detect_nbr=True):
+                  max_nbr=12, max_radius=8, detect_nbr=False):
         for idx in tqdm(range(self.length)):
             new_crystal = atom_mask(self.cd.get_crystal(idx), ratio, mask_rate, random_rate, minimum, 
-                                    self.av, self.cd.embedded, max_nbr, max_radius, detect_nbr, self.cd.gf, self.to_simple)
+                                    self.av, self.cd.embedded, max_nbr, max_radius, detect_nbr)
             self.cd.dump_crystal(new_crystal, idx, suffix)
             
     def delete_bond(self, ratio=0.1, minimum=10, suffix='bd'):
@@ -38,25 +38,26 @@ class Augmentation:
             self.cd.dump_crystal(new_crystal, idx, suffix)
             
     def remove_subgraph(self, ratio=0.1, minimum=8, suffix='sr',
-                        max_nbr=8, max_radius=6, detect_nbr=True):
+                        max_nbr=12, max_radius=8, detect_nbr=False):
         for idx in tqdm(range(self.length)):
             new_crystal = subgraph_remove(self.cd.get_crystal(idx), ratio, minimum, 
-                                          self.av, self.cd.embedded, max_nbr, max_radius, detect_nbr, self.cd.gf, self.to_simple)
+                                          self.av, self.cd.embedded, max_nbr, max_radius, detect_nbr)
             self.cd.dump_crystal(new_crystal, idx, suffix)
-    
-    def expand_supercell(self, multiples=(3,3,3), suffix='se',
-                         max_nbr=8, max_radius=6, detect_nbr=True):
-        for idx in tqdm(range(self.length)):
-            new_crystal = supercell_expand(self.cd.get_crystal(idx), multiples,
-                                          self.av, self.cd.embedded, max_nbr, max_radius, detect_nbr, self.cd.gf, self.to_simple)
-            self.cd.dump_crystal(new_crystal, idx, suffix)
-        
+
+    # def expand_supercell(self, multiples=(3,3,3), suffix='se',
+    #                      max_nbr=12, max_radius=8, detect_nbr=False):
+    #     for idx in tqdm(range(self.length)):
+    #         new_crystal = supercell_expand(self.cd.get_crystal(idx), multiples,
+    #                                       self.av, self.cd.embedded, max_nbr, max_radius, detect_nbr)
+    #         self.cd.dump_crystal(new_crystal, idx, suffix)
+
         
 def is_masked(crystal):
     return hasattr(crystal, 'masked_list')
 
+
 def atom_mask(x, ratio=0.15, mask_rate=0.8, random_rate=0.1, minimum=8, 
-              atom_vocab=None, embedding=False, max_nbr=8, max_radius=6, detect_nbr=True, gf=None, to_simple=False):
+              atom_vocab=None, embedding=False, max_nbr=12, max_radius=8, detect_nbr=True):
     """
     x: Crystal object
     rate: masked ratio in total atoms
@@ -81,17 +82,17 @@ def atom_mask(x, ratio=0.15, mask_rate=0.8, random_rate=0.1, minimum=8,
     
     xa = Crystal(structure=sa, 
                  idx=x.idx, 
-                 mpid=x.mpid, 
-#                  exfoliable_1d=x.exfoliable_1d, 
+                 mpid=x.mpid,
                  exfoliable_2d=x.exfoliable_2d, 
                  dimension=x.dimension,
                  target=x.target,
                  atom_vocab=atom_vocab)
-    xa.generate_graph(atom_vocab, embedding, max_nbr, max_radius, detect_nbr, gf, to_simple=to_simple)
+    xa.generate_graph(atom_vocab, embedding, max_nbr, max_radius, detect_nbr)
     
     xa.masked_list = list_of_chosen
     xa.masked_target = masked_target
     return xa 
+
 
 def bond_delete(x, ratio=0.1, minimum=10, atom_vocab=None):
     if minimum * ratio < 1: minimum = math.ceil(1 / ratio)
@@ -135,8 +136,7 @@ def bond_delete(x, ratio=0.1, minimum=10, atom_vocab=None):
     
     xa = Crystal(structure=x.structure, 
                  idx=x.idx, 
-                 mpid=x.mpid, 
-#                  exfoliable_1d=x.exfoliable_1d, 
+                 mpid=x.mpid,
                  exfoliable_2d=x.exfoliable_2d, 
                  dimension=x.dimension,
                  target=x.target,
@@ -145,33 +145,9 @@ def bond_delete(x, ratio=0.1, minimum=10, atom_vocab=None):
     
     return xa
 
-def bond_delete_torchgeo(x, ratio=0.1, minimum=10, atom_vocab=None):
-    if minimum * ratio < 1: minimum = math.ceil(1 / ratio)
-    g = x.graph.clone()
-    
-    n_bonds = len(g.edge_index[0])
-    n_select = round(n_bonds * ratio)
-    list_of_chosen = random.sample([i for i in range(n_bonds)], n_select)
-    list_of_remain = [i for i in range(n_bonds)]
-    for i in list_of_chosen:
-        list_of_remain.remove(i)
-    g.edge_index = g.edge_index[:,list_of_remain]
-    g.edge_attr = g.edge_attr[list_of_remain, :]
-    
-    xa = Crystal(structure=x.structure, 
-                 idx=x.idx, 
-                 mpid=x.mpid, 
-#                  exfoliable_1d=x.exfoliable_1d, 
-                 exfoliable_2d=x.exfoliable_2d, 
-                 dimension=x.dimension,
-                 target=x.target,
-                 atom_vocab=atom_vocab)
-    xa.graph = g
-    
-    return xa
 
 def subgraph_remove(x, ratio=0.1, minimum=8, 
-                    atom_vocab=None, embedding=False, max_nbr=8, max_radius=6, detect_nbr=True, gf=None, to_simple=False):
+                    atom_vocab=None, embedding=False, max_nbr=8, max_radius=6, detect_nbr=True):
     if minimum * ratio < 1: minimum = math.ceil(1 / ratio)
     sa = _make_minimum_supercell(x.structure, minimum)
     if atom_vocab is None:
@@ -184,35 +160,37 @@ def subgraph_remove(x, ratio=0.1, minimum=8,
     
     xa = Crystal(structure=sa, 
                  idx=x.idx, 
-                 mpid=x.mpid, 
-#                  exfoliable_1d=x.exfoliable_1d, 
+                 mpid=x.mpid,
                  exfoliable_2d=x.exfoliable_2d, 
                  dimension=x.dimension,
                  target=x.target,
                  atom_vocab=atom_vocab)
-    xa.generate_graph(atom_vocab, embedding, max_nbr, max_radius, detect_nbr, gf, to_simple=to_simple)
+    xa.generate_graph(atom_vocab, embedding, max_nbr, max_radius, detect_nbr)
     
     return xa
 
-def supercell_expand(x, multiples=(3,3,3), 
-                     atom_vocab=None, embedding=False, max_nbr=8, max_radius=6, detect_nbr=True, gf=None, to_simple=False):
-    sa = x.structure.copy()
-    if atom_vocab is None:
-        atom_vocab = x.atom_vocab
-        
-    sa.make_supercell(multiples)
-    
-    xa = Crystal(structure=sa, 
-                 idx=x.idx, 
-                 mpid=x.mpid, 
-#                  exfoliable_1d=x.exfoliable_1d, 
-                 exfoliable_2d=x.exfoliable_2d, 
-                 dimension=x.dimension,
-                 target=x.target,
-                 atom_vocab=atom_vocab)
-    xa.generate_graph(atom_vocab, embedding, max_nbr, max_radius, detect_nbr, gf, to_simple=to_simple)
-    
-    return xa
+
+# def supercell_expand(x, multiples=(3,3,3),
+#                      atom_vocab=None, embedding=False, max_nbr=8, max_radius=6,
+#                      detect_nbr=True):
+#     sa = x.structure.copy()
+#     if atom_vocab is None:
+#         atom_vocab = x.atom_vocab
+#
+#     sa.make_supercell(multiples)
+#
+#     xa = Crystal(structure=sa,
+#                  idx=x.idx,
+#                  mpid=x.mpid,
+# #                  exfoliable_1d=x.exfoliable_1d,
+#                  exfoliable_2d=x.exfoliable_2d,
+#                  dimension=x.dimension,
+#                  target=x.target,
+#                  atom_vocab=atom_vocab)
+#     xa.generate_graph(atom_vocab, embedding, max_nbr, max_radius, detect_nbr)
+#
+#     return xa
+
 
 def _make_minimum_supercell(s, minimum):
     sa = s.copy()
@@ -222,22 +200,6 @@ def _make_minimum_supercell(s, minimum):
         sa.make_supercell((m,m,m))
     return sa
 
-# def _recurrent_find_subgraph(s, n_find, find=[]):
-#     if n_find <= 0:
-#         return find
-#     else:
-#         if find == []:
-#             n = random.randint(0, len(s.species))
-#             find.append(n)
-#         else:
-#             nbrs = []
-#             radius = detect_radius(s)
-#             for a in find:
-#                 nbr = list(map(lambda x: x[2], s.get_all_neighbors(radius)[a]))
-#                 nbrs.extend(nbr)
-#             nbrs = list(filter(lambda x: x not in find, nbrs))
-#             find.append(random.choice(nbrs))
-#         return _find_subgraph(s, n_find-1, find)
     
 def _find_subgraph(s, n_find, find=None):
     radius = detect_radius(s)

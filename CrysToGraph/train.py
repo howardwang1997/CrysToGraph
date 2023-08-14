@@ -1,20 +1,15 @@
 # pretraining
 import time
 import os
-from multiprocessing.dummy import Pool as ThreadPool
 import random
 import copy
 
 import numpy as np
 import torch
-from torch import nn
-from torch_geometric import nn as tgnn
 from torch.nn import functional as F
 
-import torch.optim as optim
 from sklearn import metrics
 from torch.autograd import Variable
-from torch.optim.lr_scheduler import MultiStepLR
 from torch_geometric.loader import DataLoader
 from torch.nn import CrossEntropyLoss, MSELoss, L1Loss, BCEWithLogitsLoss, SmoothL1Loss
 
@@ -36,20 +31,6 @@ class AverageRecorder(object):
         self.count += n
         self.avg = self.sum / self.count
 
-
-def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
-    torch.save(state, filename)
-    if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
-
-
-def adjust_learning_rate(optimizer, epoch, k):
-    """Sets the learning rate to the initial LR decayed by 10 every k epochs"""
-    assert type(k) is int
-    lr = args.lr * (0.1 ** (epoch // k))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-
         
 def classification_eval(prediction, target):
     prediction = np.exp(prediction.numpy())
@@ -67,41 +48,12 @@ def classification_eval(prediction, target):
         raise NotImplementedError
     return accuracy, precision, recall, fscore, auc_score
         
-    
-class Normalizer(object):
-    """Normalize a Tensor and restore it later. """
-
-    def __init__(self, tensor):
-        """tensor is taken as a sample to calculate the mean and std"""
-        self.mean = torch.mean(tensor)
-        self.std = torch.std(tensor)
-
-    def norm(self, tensor):
-        return (tensor - self.mean) / self.std
-
-    def denorm(self, normed_tensor):
-        return normed_tensor * self.std + self.mean
-
-    def state_dict(self):
-        return {'mean': self.mean,
-                'std': self.std}
-
-    def load_state_dict(self, state_dict):
-        self.mean = state_dict['mean']
-        self.std = state_dict['std']
-        
 
 class AtomRepresentationPretraining():
     def __init__(self, model, cuda=True):
         self.batch_time = AverageRecorder()
         self.data_time = AverageRecorder()
         self.losses = AverageRecorder()
-        
-        self.accs = AverageRecorder()
-        self.precisions = AverageRecorder()
-        self.recalls = AverageRecorder()
-        self.f1s = AverageRecorder()
-        self.aucs = AverageRecorder()
         
         self.cuda = cuda and torch.cuda.is_available()
         self.model = model
@@ -115,7 +67,6 @@ class AtomRepresentationPretraining():
             lrs = False
         
         end = time.time()
-        self.loss_list = []
         for epoch in range(epochs):
             loss_list = []
             for i, data in enumerate(train_loader):
@@ -123,23 +74,15 @@ class AtomRepresentationPretraining():
                 
                 inputs = data
                 target = data.y
-                
-                in_var = inputs
-#                 in_var = Variable(inputs)
                 target_var = Variable(target.view(-1).long())
 
                 if self.cuda:
-                    in_var = in_var.cuda()
                     target_var = target_var.cuda()
 
                 outputs = self.model(inputs)
                 loss = criterion(outputs, target_var)
                 loss_list.append(loss.data.cpu().item())
-#                 acc, prec, rec, f1, auc = classification_eval(outputs.data.cpu(), target)
                 self.losses.update(loss.data.cpu().item(), target.size(0))
-#                 self.accs.update(acc, target.size(0))
-#                 self.precisions.update(prec, target.size(0))
-#                 self.recalls.update(rec, target.size(0))
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -149,27 +92,18 @@ class AtomRepresentationPretraining():
                 end = time.time()
                 
                 if i % verbose_freq == 0:
-                    self.verbose(epoch, i, len(train_loader), classification=True)
+                    self.verbose(epoch, i, len(train_loader))
             if lrs:
                 scheduler.step()
-            self.loss_list.append(loss_list)
             
-    def verbose(self, epoch, i, total, classification=True):
-        if classification:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Accu {accu.val:.3f} ({accu.avg:.3f})\t'
-                  'Precision {prec.val:.3f} ({prec.avg:.3f})\t'
-                  'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
-                  'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
-                  'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
-                epoch, i, total, batch_time=self.batch_time,
-                data_time=self.data_time, loss=self.losses, accu=self.accs,
-                prec=self.precisions, recall=self.recalls, f1=self.f1s,
-                auc=self.aucs)
-            )
+    def verbose(self, epoch, i, total):
+        print('Epoch: [{0}][{1}/{2}]\t'
+              'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+              'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+              'Loss {loss.val:.4f} ({loss.avg:.4f})'.format(
+            epoch, i, total, batch_time=self.batch_time,
+               data_time=self.data_time, loss=self.losses)
+        )
             
     def get_atomic_representation(self):
         return self.model.atoms, self.model.embeddings.cpu()
@@ -331,16 +265,13 @@ class MixedTargetGraphConvPretrainingWithDGL():
                     data = tuple([data[0].to(torch.device('cuda:0')), data[1].to(torch.device('cuda:0')), torch.unsqueeze(data[2], -1)])
                 elif len(data) == 2:
                     data = tuple([data[0].to(torch.device('cuda:0')), torch.unsqueeze(data[-1], -1)])
-                opor = self.model(data)
+                output = self.model(data)
                 target = data[-1]
 
-#                target = self._make_target(data[0].y)
                 target = Variable(target.float())
                 if self.cuda:
                     target = target.cuda()
-                loss = self.criterion_task(opor[1], target)
-#                print(target)
-#                print(loss)
+                loss = self.criterion_task(output, target)
 
                 loss_list.append(loss.data.cpu().item())
                 self.losses.update(loss.data.cpu().item(), criterion.batch_size)

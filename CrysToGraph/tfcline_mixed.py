@@ -14,7 +14,7 @@ from data import data as c2data
 from data import crystal
 from data.augmentation import Augmentation
 from data import augmentation
-from train import AtomRepresentationPretraining, Normalizer, GraphConvPretraining, MixedTargetGraphConvPretrainingWithDGL
+from train import AtomRepresentationPretraining, MixedTargetGraphConvPretrainingWithDGL
 
 from model.bert_transformer import TransformerConvLayer
 from model.scheduler import WarmupMultiStepLR
