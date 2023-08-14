@@ -71,16 +71,16 @@ class AtomRepresentationPretraining():
             loss_list = []
             for i, data in enumerate(train_loader):
                 self.data_time.update(time.time() - end)
-                
-                inputs = data
-                target = data.y
-                target_var = Variable(target.view(-1).long())
+
+                data = tuple(data[0].to(torch.device('cuda:0')), data[-1])
+
+                target = data[-1].view(-1, 1)
 
                 if self.cuda:
-                    target_var = target_var.cuda()
+                    target = target.cuda()
 
-                outputs = self.model(inputs)
-                loss = criterion(outputs, target_var)
+                outputs = self.model(data)
+                loss = criterion(outputs, target)
                 loss_list.append(loss.data.cpu().item())
                 self.losses.update(loss.data.cpu().item(), target.size(0))
 
