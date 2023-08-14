@@ -159,12 +159,12 @@ class CrystalDataset(Dataset):
         
     @property
     def raw_file_names(self):
-        self.raw = ['%s%s' % (self.raw_dir, name) for name in self.names]
+        self.raw = ['%s/%s' % (self.raw_dir, name) for name in self.names]
         return self.raw
 
     @property
     def processed_file_names(self):
-        self.processed = ['%s%d.xt' % (self.processed_dir, i) for i in range(self.length)]
+        self.processed = ['%s/%d.xt' % (self.processed_dir, i) for i in range(self.length)]
         return self.processed
     
     def process(self):
