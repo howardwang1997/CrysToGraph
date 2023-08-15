@@ -257,7 +257,7 @@ class CrystalDataset(Dataset):
 
 
 class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
-    def __init__(self, root='./crystal_dataset/', atom_vocab=None, labels=None, suffix='',
+    def __init__(self, root='./crystal_dataset/', atom_vocab=None, suffix='',
                  names=None, embedded=False, raw_dir='raw/', processed_dir='processed/', load_data=True):
         
         if root[-1] != '/':
@@ -267,7 +267,6 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
         self.length = 0
         self.raw = None
         self.processed = None
-        self.labels = labels
         self.raw_dir = root + raw_dir
         self.processed_dir = root + processed_dir
     
