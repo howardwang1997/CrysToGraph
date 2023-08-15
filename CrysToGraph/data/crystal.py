@@ -126,7 +126,7 @@ class Crystal:
         
     
 class CrystalDataset(Dataset):
-    def __init__(self, root='./crystal_dataset/', atom_vocab=None, labels=None, min_atoms=1,
+    def __init__(self, root='./crystal_dataset/', atom_vocab=None, min_atoms=1,
                  names=None, transform=None, pre_transform=None, pre_filter=None, detect_nbr=False, process=True,
                  raw_dir='raw/', processed_dir='processed/'):
         
@@ -138,7 +138,6 @@ class CrystalDataset(Dataset):
         self.raw = None
         self.processed = None
         self.detect_nbr = detect_nbr
-        self.labels = labels
         self.do_process = process
         self.min_atoms = min_atoms
     
@@ -149,9 +148,7 @@ class CrystalDataset(Dataset):
         if names is None:
             self.length = len(os.listdir(self.raw_dir))
             self.names = ['%d.cif' % i for i in range(self.length)]
-            
-        self.masked_labels = False
-        self.labels = False
+
         if atom_vocab is not None:
             self.atom_vocab = atom_vocab
         
