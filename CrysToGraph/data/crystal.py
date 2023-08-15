@@ -126,7 +126,7 @@ class Crystal:
         
     
 class CrystalDataset(Dataset):
-    def __init__(self, root='./crystal_dataset/', atom_vocab=None, min_atoms=1,
+    def __init__(self, root='./crystal_dataset/', atom_vocab=None, min_atoms=1, embeddings=None,
                  names=None, transform=None, pre_transform=None, pre_filter=None, detect_nbr=False, process=True,
                  raw_dir='raw/', processed_dir='processed/'):
         
@@ -140,6 +140,9 @@ class CrystalDataset(Dataset):
         self.detect_nbr = detect_nbr
         self.do_process = process
         self.min_atoms = min_atoms
+        self.embeddings = embeddings
+        if self.embeddings is None:
+            self.embedded = False
     
         if raw_dir[-1] != '/':
             raw_dir = '%s/' % raw_dir
@@ -247,10 +250,10 @@ class CrystalDataset(Dataset):
         return xt
     
     def dump_crystal(self, c, idx, suffix=''):
-        joblib.dump(c, '%s%d.xt%s' % (self.processed_dir, idx, suffix))
+        joblib.dump(c, '%s/%d.xt%s' % (self.processed_dir, idx, suffix))
         
     def dump(self, name='crystal_dataset.jbl'):
-        joblib.dump(self, '%s%s' % (self.processed_dir, name))
+        joblib.dump(self, '%s/%s' % (self.processed_dir, name))
     
     def get(self, idx):
         pass
