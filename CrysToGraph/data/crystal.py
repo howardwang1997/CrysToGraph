@@ -341,7 +341,6 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
 
         return labels.view(-1,1)
 
-
     def set_labels(self, labels_list):
         self.labels_list = labels_list
         self.labels = True
@@ -399,6 +398,16 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
         batched_graph = dgl.batch(graphs)
         batched_line_graph = dgl.batch(line_graphs)
         return batched_graph, batched_line_graph, torch.tensor(labels)
+
+    @staticmethod
+    def collate_masked_graph(
+        samples: List[Tuple[dgl.DGLGraph, dgl.DGLGraph, torch.Tensor]]
+    ):
+        """Dataloader helper to batch graphs cross `samples`."""
+        graphs, line_graphs, labels = map(list, zip(*samples))
+        batched_graph = dgl.batch(graphs)
+        batched_line_graph = dgl.batch(line_graphs)
+        return batched_graph, batched_line_graph, torch.cat(labels, dim=0)
         
 
 def load_dataset(name='crystal_dataset', root='./crystal_dataset/', processed_dir='processed/', in_root=True):

@@ -25,6 +25,7 @@ atom_vocab = joblib.load('/home/howardwang/Documents/datasets/overall/atom_vocab
 # start the pretraining
 atom_fea_len = 64
 nbr_fea_len = 76
+batch_size = 32
 
 model = nn.ModuleList([tgnn.CGConv(channels=128,
                                    dim=nbr_fea_len,
@@ -36,11 +37,11 @@ pton = PreTrainingOnNodes(atom_fea_len, nbr_fea_len, vocab_len, module=model)
 print(pton)
 
 t = time.time()
-pcd = crystal.ProcessedCrystalDataset(suffix='am')
+pcd = crystal.ProcessedDGLCrystalDataset(suffix='am')
 pcd.set_atom_vocab(atom_vocab)
 pcd.set_masked_labels()
 arp = AtomRepresentationPretraining(model=pton)
-trainloader = DataLoader(pcd, batch_size=100, shuffle=True) # need to make masked labels
+trainloader = DataLoader(pcd, batch_size=batch_size, shuffle=True, collate_fn=pcd.collate_masked_graph)
 criterion = nn.CrossEntropyLoss(ignore_index=-1)
 optimizer = optim.SGD(pton.parameters(), lr=0.01, momentum=0.9)
 scheduler = optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.1)
