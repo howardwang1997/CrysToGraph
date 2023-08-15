@@ -57,4 +57,4 @@ _, emb = arp.get_atomic_representation()
 loss = arp.loss_list
 joblib.dump(loss, 'output/loss_arp_0.jbl')
 
-torch.save(emb, 'config/atom_representations_86_0.tch')
+torch.save(emb, 'config/atom_representations_86_0.pt')
