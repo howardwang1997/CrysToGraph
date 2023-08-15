@@ -187,13 +187,14 @@ class ContrastivePreTraining(nn.Module):
     def do_gt(self, gt_layer, atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea):
         return gt_layer(atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea)
 
+
 class Finetuning(nn.Module):
     """
     Finetuning the model with specific tasks.
     """
     def __init__(self, orig_atom_fea_len, nbr_fea_len,
-                atom_fea_len=64, line_fea_len=30, n_conv=3, h_fea_len=128, n_fc=3, n_gt=3,
-                embeddings=None, module=None, norm=False, drop=0.0):
+                 atom_fea_len=64, line_fea_len=30, n_conv=3, h_fea_len=128, n_fc=3, n_gt=3,
+                 embeddings=None, module=None, norm=False, drop=0.0):
         super(Finetuning, self).__init__()
         self.embeddings = embeddings
         self.embedded = True

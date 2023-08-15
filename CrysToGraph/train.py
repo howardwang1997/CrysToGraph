@@ -202,7 +202,7 @@ class GraphConvPretraining():
         torch.save(self.model.state_dict(), path)
 
 
-class MixedTargetGraphConvPretrainingWithDGL():
+class FineTuningWithDGL():
     def __init__(self, model, cuda=True, shuffle=False, random_seed=None):
         self.batch_time = AverageRecorder()
         self.data_time = AverageRecorder()
@@ -231,9 +231,8 @@ class MixedTargetGraphConvPretrainingWithDGL():
             new[i, targets[i]] = 1
         return new
 
-    def train(self, mixed_train_loader, criterion, optimizer, epochs, scheduler=None, verbose_freq: int=100, grad_accum: int=1):
+    def train(self, mixed_train_loader, optimizer, epochs, scheduler=None, verbose_freq: int=100, grad_accum: int=1):
         self.model.train()
-        self.criterion = criterion
         lrs = True
         if scheduler is None:
             lrs = False
@@ -242,8 +241,6 @@ class MixedTargetGraphConvPretrainingWithDGL():
         mpcd = mixed_train_loader.dataset
         batch_size = mixed_train_loader.batch_size
 
-        self.criterion_task = BCEWithLogitsLoss()
-        self.criterion_task = CrossEntropyLoss()
         self.criterion_task = MSELoss()
         
         end = time.time()

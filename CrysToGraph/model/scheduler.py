@@ -6,7 +6,7 @@ from torch.optim.lr_scheduler import _LRScheduler
 class WarmupMultiStepLR(_LRScheduler):
     def __init__(self, 
                  optimizer: Optimizer,
-                 milestones: int,
+                 milestones: list,
                  warmup_steps: int=10,
                  gamma: float=0.1,
                  last_epoch: int=-1,
