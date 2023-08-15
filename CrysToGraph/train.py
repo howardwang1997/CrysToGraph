@@ -57,6 +57,8 @@ class AtomRepresentationPretraining():
         
         self.cuda = cuda and torch.cuda.is_available()
         self.model = model
+
+        self.loss_list = []
         if self.cuda:
             self.model = model.cuda()
         
@@ -95,6 +97,7 @@ class AtomRepresentationPretraining():
                     self.verbose(epoch, i, len(train_loader))
             if lrs:
                 scheduler.step()
+            self.loss_list.append(sum(loss_list) / len(loss_list))
             
     def verbose(self, epoch, i, total):
         print('Epoch: [{0}][{1}/{2}]\t'
@@ -121,6 +124,7 @@ class GraphConvPretraining():
         self.model = model
         if self.cuda:
             self.model = model.cuda()
+        self.loss_list = []
         
     def train(self, mixed_train_loader, criterion, optimizer, epochs, scheduler=None, verbose_freq=100):
         self.model.train()
@@ -134,7 +138,6 @@ class GraphConvPretraining():
         batch_size = mixed_train_loader.batch_size
         
         end = time.time()
-        self.loss_list = []
         for epoch in range(epochs):
             loss_list = []
             
@@ -156,8 +159,8 @@ class GraphConvPretraining():
 
                 outputs_i = self.model(inputs_i)
                 outputs_j = self.model(inputs_j)
-                output_i = F.normalize(outputs_i, dim=1)
-                output_j = F.normalize(outputs_j, dim=1)
+                outputs_i = F.normalize(outputs_i, dim=1)
+                outputs_j = F.normalize(outputs_j, dim=1)
                 loss = criterion(outputs_i, outputs_j)
                 loss_list.append(loss.data.cpu().item())
                 self.losses.update(loss.data.cpu().item(), criterion.batch_size)
@@ -173,7 +176,8 @@ class GraphConvPretraining():
                     self.verbose(epoch, i, len(mixed_train_loader))
             if lrs:
                 scheduler.step()
-            self.loss_list.append(loss_list)
+            self.loss_list.append(sum(loss_list) / len(loss_list))
+        self.save_state_dict()
             
     def validate(self):
         pass
@@ -186,20 +190,15 @@ class GraphConvPretraining():
             epoch, i, total, batch_time=self.batch_time,
             data_time=self.data_time, loss=self.losses)
         )
-            
-    def save_model(self, path=''):
-        if path == '':
-            path = 'config/model.tch'
-        torch.save(self.model, path)
-    
-    def load_model(self, path=''):
-        if path == '':
-            path = 'config/model.tch'
-        return torch.load(path)
-    
+
     def save_state_dict(self, path=''):
+        try:
+            os.mkdir('results')
+        except FileExistsError:
+            pass
+
         if path == '':
-            path = 'config/model.tsd'
+            path = 'results/%s.pt' % self.name
         torch.save(self.model.state_dict(), path)
 
 
@@ -215,6 +214,7 @@ class MixedTargetGraphConvPretrainingWithDGL():
         self.model = model
         if self.cuda:
             self.model = model.cuda()
+        self.loss_list = []
 
     def _step(self, inputs):
         if self.cuda:
@@ -247,7 +247,6 @@ class MixedTargetGraphConvPretrainingWithDGL():
         self.criterion_task = MSELoss()
         
         end = time.time()
-        self.loss_list = []
         for epoch in range(epochs):
             loss_list = []
             self.losses.reset()
@@ -290,7 +289,7 @@ class MixedTargetGraphConvPretrainingWithDGL():
                     self.verbose(epoch, i, len(mixed_train_loader))
             if lrs:
                 scheduler.step()
-            self.loss_list.append(loss_list)
+            self.loss_list.append(sum(loss_list) / len(loss_list))
             self.save_model()
 
     def verbose(self, epoch, i, total):

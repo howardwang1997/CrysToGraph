@@ -42,9 +42,9 @@ pcd.set_masked_labels()
 arp = AtomRepresentationPretraining(model=pton)
 trainloader = DataLoader(pcd, batch_size=100, shuffle=True) # need to make masked labels
 criterion = nn.CrossEntropyLoss(ignore_index=-1)
-optimizer = optim.SGD(pton.parameters(), lr=0.02, momentum=0.9)
-scheduler = optim.lr_scheduler.StepLR(optimizer, 15, gamma=0.1)
-epochs = 30
+optimizer = optim.SGD(pton.parameters(), lr=0.01, momentum=0.9)
+scheduler = optim.lr_scheduler.StepLR(optimizer, 20, gamma=0.1)
+epochs = 60
 
 arp.train(train_loader=trainloader, 
           criterion=criterion, 
@@ -55,6 +55,6 @@ print('training time =', time.time()-t)
 
 _, emb = arp.get_atomic_representation()
 loss = arp.loss_list
-joblib.dump(loss, 'output/loss_38.jbl')
+joblib.dump(loss, 'output/loss_arp_0.jbl')
 
-torch.save(emb, 'config/atom_representations_85_38.tch')
+torch.save(emb, 'config/atom_representations_86_0.tch')
