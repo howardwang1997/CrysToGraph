@@ -323,17 +323,25 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
         self.masked_labels = True
         self.labels = True
         try:
-            self.labels_list = joblib.load('%smasked_target.jbl' % self.processed_dir)
-            self.masked_list = joblib.load('%smasked_list.jbl' % self.processed_dir)
+            self.labels_list = joblib.load('%smasked_labels.jbl' % self.processed_dir)
         except FileNotFoundError:
             self.labels_list = []
             self.masked_list = []
             for i in range(self.length):
-                self.labels_list.append(self.get_crystal(i).masked_target)
-                self.masked_list.append(self.get_crystal(i).masked_list)
-                joblib.dump(self.labels_list, '%smasked_target.jbl' % self.processed_dir)
-                joblib.dump(self.masked_list, '%smasked_list.jbl' % self.processed_dir)
+                self.labels_list.append(self._get_masked_labels(i))
+                joblib.dump(self.labels_list, '%smasked_labels.jbl' % self.processed_dir)
         
+    def _get_masked_labels(self, idx):
+        xt = self.get_crystal(idx)
+        labels = torch.empty(len(xt.graph[0].edges()[0])).fill_(-1)
+        masked_list = xt.masked_list
+        masked_labels = xt.masked_target
+        for i in range(len(masked_list)):
+            labels[masked_list[i]] = masked_labels[i]
+
+        return labels.view(-1,1)
+
+
     def set_labels(self, labels_list):
         self.labels_list = labels_list
         self.labels = True
