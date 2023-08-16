@@ -327,9 +327,11 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
         except FileNotFoundError:
             self.labels_list = []
             self.masked_list = []
-            for i in range(self.length):
+            print('SET MASKED LABELS')
+            for i in tqdm(range(self.length)):
                 self.labels_list.append(self._get_masked_labels(i))
                 joblib.dump(self.labels_list, '%smasked_labels.jbl' % self.processed_dir)
+            print('DONE')
         
     def _get_masked_labels(self, idx):
         xt = self.get_crystal(idx)
