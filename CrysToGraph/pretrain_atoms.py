@@ -7,8 +7,8 @@ from torch import nn, optim
 from torch_geometric import nn as tgnn
 from torch_geometric.loader import DataLoader
 
-import crystal
-from .model.NN import PreTrainingOnNodes
+from data import crystal
+from model.NN import PreTrainingOnNodes
 from train import AtomRepresentationPretraining
 
 # make dir and get data from matbench
