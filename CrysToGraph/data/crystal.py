@@ -322,19 +322,8 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
     def set_masked_labels(self):
         self.masked_labels = True
         self.labels = True
-        try:
-            self.labels_list = joblib.load('%smasked_labels.jbl' % self.root)
-        except FileNotFoundError:
-            self.labels_list = []
-            self.masked_list = []
-            print('SET MASKED LABELS')
-            for i in tqdm(range(self.length)):
-                self.labels_list.append(self._get_masked_labels(i))
-                joblib.dump(self.labels_list, '%smasked_labels.jbl' % self.root)
-            print('DONE')
-        
-    def _get_masked_labels(self, idx):
-        xt = self.get_crystal(idx)
+
+    def _get_masked_labels(self, xt):
         labels = torch.empty(len(xt.graph[0].edges()[0])).fill_(-1)
         masked_list = xt.masked_list
         masked_labels = xt.masked_target
@@ -370,13 +359,19 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
 #     @functools.lru_cache(maxsize=30000)
     def __getitem__(self, idx):
         assert self.labels
-        label = self.labels_list[idx]
         
         if self.load_data:
             graph = self.all_data[idx]
         else:
             xt = self.get_crystal(idx)
             graph = xt.graph
+
+        if not self.masked_labels:
+            label = self.labels_list[idx]
+        else:
+            if self.load_data:
+                xt = self.get_crystal(idx)
+            label = self._get_masked_labels(xt)
         
         if type(graph) is tuple:
             return graph[0], graph[1], label
