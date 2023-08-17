@@ -310,7 +310,6 @@ class FineTuningWithDGL():
             path = 'config/model%d.tsd' % self.save_model_index
         torch.save(self.model.state_dict(), path)
 
-
     def load_model(self, path=''):
         if path == '':
             path = 'config/model.tch'

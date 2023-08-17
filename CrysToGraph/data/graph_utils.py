@@ -106,6 +106,7 @@ def dgl_get_tg_batch_tensor(g):
         pointer += l
     return batch
 
+
 def dgl_get_tg_batch_edge_index(g):
     gs = dgl.unbatch(g)
     batch_edge = torch.Tensor(2, g.num_nodes()).long()
@@ -116,6 +117,7 @@ def dgl_get_tg_batch_edge_index(g):
         batch_edge[1, pointer: pointer+l] = torch.tensor([i for i in range(pointer, pointer+l)])
         pointer += l
     return batch_edge
+
 
 def tg_batch_to_batch_edge_index(batch):
     batch_edge = torch.Tensor(2, batch.shape[0]).long()
@@ -134,6 +136,7 @@ def tg_batch_to_batch_edge_index(batch):
     attn_mask[start:, start:] = 1
     return batch_edge, attn_mask
 
+
 def laplacian_positional_encoding(g, pos_enc_dim):
     """
         DGL internal method
@@ -141,8 +144,10 @@ def laplacian_positional_encoding(g, pos_enc_dim):
 
     return dgl.laplacian_pe(g, pos_enc_dim, padding=True)
 
+
 def random_walk_positional_encoding(g, pos_enc_dim):
     return dgl.random_walk_pe(g, pos_enc_dim)
+
 
 def prepare_line_graph_batch(
     batch: Tuple[Tuple[dgl.DGLGraph, dgl.DGLGraph], torch.Tensor],
@@ -163,6 +168,7 @@ def prepare_line_graph_batch(
 
     return batch
 
+
 def compute_bond_cosines(edges):
     """
     from alignn.graphs
@@ -179,6 +185,7 @@ def compute_bond_cosines(edges):
     bond_cosine = torch.clamp(bond_cosine, -1, 1)
     return {'h': bond_cosine}
 
+
 def detect_radius(structure, max_nbr=12, min_radius=2, max_radius=8, step=0.1):
     """
     implemented on 22/06/2023, debuged and more efficient
@@ -194,6 +201,7 @@ def detect_radius(structure, max_nbr=12, min_radius=2, max_radius=8, step=0.1):
 
     radius = min_radius + (len(m) - 1) * step
     return radius
+
 
 def convert_spherical(euclidean):
     if len(euclidean.shape) == 1:
@@ -225,3 +233,40 @@ def convert_spherical(euclidean):
         out = out.T.to(device)
 
     return out
+
+
+def convert_euclidean(spherical):
+    if len(spherical.shape) == 1:
+        r, theta, phi = spherical[0], spherical[1], spherical[2]
+        x = r * torch.sin(theta) * torch.cos(phi)
+        y = r * torch.sin(theta) * torch.sin(phi)
+        z = r * torch.cos(theta)
+        out = torch.tensor([x, y, z])
+    elif len(spherical.shape) == 2:
+        cuda = torch.cuda.is_available()
+        device = spherical.device
+        if cuda:
+            spherical = spherical.cuda()
+        r, theta, phi = spherical[:, 0], spherical[:, 1], spherical[:, 2]
+        x = r * torch.sin(theta) * torch.cos(phi)
+        y = r * torch.sin(theta) * torch.sin(phi)
+        z = r * torch.cos(theta)
+        out = torch.vstack([x, y, z])
+        out = out.T.to(device)
+
+    return out
+
+
+def rotate(euclideans, xyz: str):
+    a, b = xyz[0], xyz[1]
+    assert a in 'xyz' and b in 'xyz'
+    a, b = 'xyz'.index(a), 'xyz'.index(b)
+    euclideans[:, a], euclideans[:, b] = -euclideans[:, b], euclideans[:, a]
+    return euclideans
+
+
+def mirror(euclideans, xyz: str):
+    assert xyz in 'xyz'
+    column = 'xyz'.index(xyz)
+    euclideans[:, column] *= -1
+    return euclideans
