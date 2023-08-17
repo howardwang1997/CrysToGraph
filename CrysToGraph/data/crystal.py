@@ -323,14 +323,14 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
         self.masked_labels = True
         self.labels = True
         try:
-            self.labels_list = joblib.load('%smasked_labels.jbl' % self.processed_dir)
+            self.labels_list = joblib.load('%smasked_labels.jbl' % self.root)
         except FileNotFoundError:
             self.labels_list = []
             self.masked_list = []
             print('SET MASKED LABELS')
             for i in tqdm(range(self.length)):
                 self.labels_list.append(self._get_masked_labels(i))
-                joblib.dump(self.labels_list, '%smasked_labels.jbl' % self.processed_dir)
+                joblib.dump(self.labels_list, '%smasked_labels.jbl' % self.root)
             print('DONE')
         
     def _get_masked_labels(self, idx):
@@ -410,7 +410,24 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
         batched_graph = dgl.batch(graphs)
         batched_line_graph = dgl.batch(line_graphs)
         return batched_graph, batched_line_graph, torch.cat(labels, dim=0)
-        
+
+
+class ProcessedCrystalDatasetMaskedLabels(ProcessedDGLCrystalDataset):
+    def __getitem__(self, idx):
+        xt = self.get_crystal(idx)
+        labels = torch.empty(len(xt.graph[0].edges()[0])).fill_(-1)
+        masked_list = xt.masked_list
+        masked_labels = xt.masked_target
+        for i in range(len(masked_list)):
+            labels[masked_list[i]] = masked_labels[i]
+
+        return labels.view(-1,1)
+
+    @staticmethod
+    def collate_labels(samples: List[torch.Tensor]):
+        """Dataloader helper to batch graphs cross `samples`."""
+        return samples
+
 
 def load_dataset(name='crystal_dataset', root='./crystal_dataset/', processed_dir='processed/', in_root=True):
     if in_root:
