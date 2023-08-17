@@ -69,7 +69,7 @@ class PreTrainingOnNodes(nn.Module):
             (data[0].edata['spherical'][:, 0] > 8).view(-1, 1)]).float()
         nbr_fea_idx = torch.vstack(data[0].edges())
 
-        atom_fea = self.embeddings(atom_fea.T[0])
+        atom_fea = self.embeddings(atom_fea.T[0].long())
 
         for conv_func in self.convs:
             atom_fea = conv_func(atom_fea, nbr_fea_idx, nbr_fea)

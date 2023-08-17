@@ -27,7 +27,7 @@ atom_fea_len = 64
 nbr_fea_len = 76
 batch_size = 32
 
-model = nn.ModuleList([tgnn.CGConv(channels=128,
+model = nn.ModuleList([tgnn.CGConv(channels=64,
                                    dim=nbr_fea_len,
                                    batch_norm=True)
                        for _ in range(3)])

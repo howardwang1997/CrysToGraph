@@ -74,7 +74,7 @@ class AtomRepresentationPretraining():
             for i, data in enumerate(train_loader):
                 self.data_time.update(time.time() - end)
 
-                data = tuple(data[0].to(torch.device('cuda:0')), data[-1])
+                data = (data[0].to(torch.device('cuda:0')), data[-1])
 
                 target = data[-1].view(-1, 1)
 

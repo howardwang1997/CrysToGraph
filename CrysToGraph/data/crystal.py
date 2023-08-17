@@ -324,13 +324,13 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
         self.labels = True
 
     def _get_masked_labels(self, xt):
-        labels = torch.empty(len(xt.graph[0].edges()[0])).fill_(-1)
+        labels = torch.empty(len(xt.graph[0].ndata['atom_features'])).fill_(-1)
         masked_list = xt.masked_list
         masked_labels = xt.masked_target
         for i in range(len(masked_list)):
             labels[masked_list[i]] = masked_labels[i]
 
-        return labels.view(-1,1)
+        return labels.long()
 
     def set_labels(self, labels_list):
         self.labels_list = labels_list
