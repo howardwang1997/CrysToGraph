@@ -5,7 +5,7 @@ import joblib
 import torch
 from torch import nn, optim
 from torch_geometric import nn as tgnn
-from torch_geometric.loader import DataLoader
+from torch.utils.data import DataLoader
 
 from data import crystal
 from model.NN import PreTrainingOnNodes
