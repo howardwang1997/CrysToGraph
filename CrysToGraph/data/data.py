@@ -75,7 +75,7 @@ def dicts_to_cifs(dicts, dataset_name='dataset'):
         d = dicts[i]
         s = Structure.from_dict(d)
         w = CifWriter(s)
-        n = '%s/%s.cif' % (dataset_name, i)
+        n = '%s/%d.cif' % (dataset_name, i)
         w.write_file(n)
 
 def read_cif(path):
