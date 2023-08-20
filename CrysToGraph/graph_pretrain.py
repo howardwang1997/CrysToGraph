@@ -52,7 +52,7 @@ ntxent_criterion = ntxl(batch_size=batch_size, temperature=0.1, use_cosine_simil
 
 gcp.train(train_loader=trainloader,
           criterion=ntxent_criterion,
-          optimizer=optimizer, 
+          optimizer=optimizer,
           scheduler=scheduler,
           epochs=epochs,
           verbose_freq=800)
