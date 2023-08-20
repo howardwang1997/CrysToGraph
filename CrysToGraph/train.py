@@ -113,12 +113,10 @@ class AtomRepresentationPretraining():
         
 
 class GraphConvPretraining():
-    def __init__(self, model, cuda=True, shuffle=False, random_seed=None):
+    def __init__(self, model, cuda=True):
         self.batch_time = AverageRecorder()
         self.data_time = AverageRecorder()
         self.losses = AverageRecorder()
-        self.shuffle = shuffle
-        self.random_seed = random_seed
         
         self.cuda = cuda and torch.cuda.is_available()
         self.model = model
@@ -126,39 +124,25 @@ class GraphConvPretraining():
             self.model = model.cuda()
         self.loss_list = []
         
-    def train(self, mixed_train_loader, criterion, optimizer, epochs, scheduler=None, verbose_freq=100):
+    def train(self, train_loader, criterion, optimizer, epochs, scheduler=None, verbose_freq=100):
         self.model.train()
         lrs = True
         if scheduler is None:
             lrs = False
-        if self.random_seed is None:
-            self.random_seed = [random.random() for i in range(epochs)]
-#            print(self.random_seed)
-        mpcd = mixed_train_loader.dataset
-        batch_size = mixed_train_loader.batch_size
         
         end = time.time()
         for epoch in range(epochs):
             loss_list = []
             
-            if self.shuffle:
-                mpcd_copy = copy.deepcopy(mpcd)
-                mpcd_copy.shuffle_by_batch(batch_size=batch_size, random_seed=self.random_seed[epoch])
-                mixed_train_loader = DataLoader(mpcd_copy, batch_size=batch_size, shuffle=False)
-#                print(mpcd_copy.idx_map)
-                
-            for i, (data_i, data_j) in enumerate(mixed_train_loader):
+            for i, (data_i, data_j) in enumerate(train_loader):
                 self.data_time.update(time.time() - end)
-                
-                inputs_i = data_i
-                inputs_j = data_j
 
                 if self.cuda:
-                    inputs_i = inputs_i.cuda()
-                    inputs_j = inputs_j.cuda()
+                    data_i = data_i[0].cuda(), data_i[1].cuda()
+                    data_j = data_j[0].cuda(), data_j[1].cuda()
 
-                outputs_i = self.model(inputs_i)
-                outputs_j = self.model(inputs_j)
+                outputs_i = self.model(data_i)
+                outputs_j = self.model(data_j)
                 outputs_i = F.normalize(outputs_i, dim=1)
                 outputs_j = F.normalize(outputs_j, dim=1)
                 loss = criterion(outputs_i, outputs_j)
@@ -173,7 +157,7 @@ class GraphConvPretraining():
                 end = time.time()
                 
                 if i % verbose_freq == 0:
-                    self.verbose(epoch, i, len(mixed_train_loader))
+                    self.verbose(epoch, i, len(train_loader))
             if lrs:
                 scheduler.step()
             self.loss_list.append(sum(loss_list) / len(loss_list))
@@ -203,12 +187,10 @@ class GraphConvPretraining():
 
 
 class FineTuningWithDGL():
-    def __init__(self, model, cuda=True, shuffle=False, random_seed=None):
+    def __init__(self, model, cuda=True):
         self.batch_time = AverageRecorder()
         self.data_time = AverageRecorder()
         self.losses = AverageRecorder()
-        self.shuffle = shuffle
-        self.random_seed = random_seed
 
         self.cuda = cuda and torch.cuda.is_available()
         self.model = model
@@ -223,7 +205,7 @@ class FineTuningWithDGL():
         return outputs
 
     def _calc_loss(self, outputs):
-        return self.criterion(outputs[0], outputs[1])
+        return self.criterion_task(outputs[0], outputs[1])
 
     def _make_target(self, targets, n_class=2):
         new = torch.zeros((len(targets), n_class))
@@ -236,10 +218,6 @@ class FineTuningWithDGL():
         lrs = True
         if scheduler is None:
             lrs = False
-        if self.random_seed is None:
-            self.random_seed = [random.random() for i in range(epochs)]
-        mpcd = mixed_train_loader.dataset
-        batch_size = mixed_train_loader.batch_size
 
         self.criterion_task = MSELoss()
         
@@ -248,11 +226,6 @@ class FineTuningWithDGL():
             loss_list = []
             self.losses.reset()
             
-            if self.shuffle:
-                mpcd_copy = copy.deepcopy(mpcd)
-                mpcd_copy.shuffle_by_batch(batch_size=batch_size-1, random_seed=self.random_seed[epoch])
-                mixed_train_loader = DataLoader(mpcd_copy, batch_size=batch_size, shuffle=False)
-
             for i, data in enumerate(mixed_train_loader):
                 self.data_time.update(time.time() - end)
                 end = time.time()

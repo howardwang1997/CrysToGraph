@@ -42,7 +42,7 @@ embeddings = torch.load('embeddings_84_cgcnn.pt').cuda()
 ft = Finetuning(atom_fea_len, nbr_fea_len, embeddings=embeddings, h_fea_len=256, n_conv=3, n_fc=2,
                 module=module, norm=True, drop=0.0)
 ft.embedded=True
-mtcp = FineTuningWithDGL(model=ft, shuffle=False)
+mtcp = FineTuningWithDGL(model=ft)
 # optimizer = optim.SGD(ft.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)
 optimizer = optim.AdamW(ft.parameters(), lr=0.0001, betas=(0.9, 0.99), weight_decay=0)
 scheduler = WarmupMultiStepLR(optimizer, [150], gamma=0.1)

@@ -51,7 +51,7 @@ class Augmentation:
     #                                       self.av, self.cd.embedded, max_nbr, max_radius, detect_nbr)
     #         self.cd.dump_crystal(new_crystal, idx, suffix)
 
-    def mirror_rotate(self, r_m_index=0, suffix='mr'):
+    def mirror_rotate(self, r_m_index=-1, suffix='mr'):
         for idx in tqdm(range(self.length)):
             new_crystal = rotate_mirror(self.cd.get_crystal(idx), r_m_index)
             self.cd.dump_crystal(new_crystal, idx, suffix)
@@ -197,16 +197,16 @@ def subgraph_remove(x, ratio=0.1, minimum=8,
 #     return xa
 
 
-def rotate_mirror(x, r_m_index: int = 0):
-    if r_m_index <= 0 or r_m_index >= 10:
-        r_m_index = random.random(1, 9)
+def rotate_mirror(x, r_m_index: int = -1):
+    if r_m_index < 0 or r_m_index >= 9:
+        r_m_index = random.randint(0, 8)
 
-    if r_m_index <= 3:
+    if r_m_index < 3:
         r_m_fn = mirror
         xyz = 'xyz'[r_m_index]
     else:
         r_m_fn = rotate
-        xyz = ['xy', 'yx', 'yz', 'zy', 'xz', 'zx'][r_m_index]
+        xyz = ['xy', 'yx', 'yz', 'zy', 'xz', 'zx'][r_m_index - 3]
 
     g = x.graph[0]
     euclidean = convert_euclidean(g.edata['spherical'])

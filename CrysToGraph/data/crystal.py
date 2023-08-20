@@ -8,6 +8,7 @@ import numpy as np
 
 from typing import Tuple, List
 import dgl
+import random
 
 from pymatgen.core import Lattice, Structure, Molecule
 from pymatgen.io.cif import CifParser
@@ -312,8 +313,10 @@ class ProcessedDGLCrystalDataset(torch.utils.data.Dataset):
     def __len__(self):
         return self.length    
     
-    def get_crystal(self, idx):
-        xt = joblib.load('%s%d.xt%s' % (self.processed_dir, idx, self.suffix))
+    def get_crystal(self, idx, suffix=None):
+        if suffix is None:
+            suffix = self.suffix
+        xt = joblib.load('%s%d.xt%s' % (self.processed_dir, idx, suffix))
         return xt
         
     def dump(self, name='crystal_dataset_processed.jbl'):
@@ -422,6 +425,74 @@ class ProcessedCrystalDatasetMaskedLabels(ProcessedDGLCrystalDataset):
     def collate_labels(samples: List[torch.Tensor]):
         """Dataloader helper to batch graphs cross `samples`."""
         return samples
+
+
+class ProcessedCrystalDatasetContrastive(ProcessedDGLCrystalDataset):
+    def __init__(self, root='./crystal_dataset/', atom_vocab=None, suffixes=['', 'am'],
+                 names=None, embedded=False, raw_dir='raw/', processed_dir='processed/', load_data=False,
+                 random_suffix=False):
+        if root[-1] != '/':
+            root = '%s/' % root
+        self.root = root
+        self.names = names
+        self.length = 0
+        self.raw = None
+        self.processed = None
+        self.raw_dir = root + raw_dir
+        self.processed_dir = root + processed_dir
+        self.random = random_suffix
+
+        if raw_dir[-1] != '/':
+            self.raw_dir = '%s/' % self.raw_dir
+        if processed_dir[-1] != '/':
+            self.processed_dir = '%s/' % self.processed_dir
+        if names is None:
+            self.length = len(os.listdir(self.raw_dir))
+            self.names = ['%d.cif' % i for i in range(self.length)]
+
+        self.suffixes = suffixes
+        self.suffix = suffixes[0]
+        self.atom_vocab = atom_vocab
+        self.embedded = embedded
+        self.prepare_batch = prepare_line_graph_batch
+        self.load_data = False
+        if load_data:
+            self.load_all_data()
+
+        super().__init__()
+
+    def __getitem__(self, idx):
+        if self.load_data:
+            graph = self.all_data[idx]
+        else:
+            xt = self.get_crystal(idx, suffix=self.suffix)
+            graph = xt.graph
+        graphs = [graph]
+
+        if self.random:
+            graphs.append(self.get_crystal(idx,
+                                           suffix=self.suffixes[random.randint(1, len(self.suffixes)-1)]).graph)
+        for i in range(1, len(self.suffixes)):
+            graphs.append(self.get_crystal(idx, suffix=self.suffixes[i]).graph)
+
+        return graphs
+
+    @staticmethod
+    def collate(samples: List[List[dgl.DGLGraph,]]):
+        """Dataloader helper to batch graphs cross `samples`."""
+        graphs = tuple(map(list, zip(*samples)))
+        batched_graphs = tuple(map(dgl.batch, graphs))
+
+        return batched_graphs
+
+    @staticmethod
+    def collate_line_graph(
+        samples: List[List[Tuple[dgl.DGLGraph, dgl.DGLGraph],]]
+    ):
+        """Dataloader helper to batch graphs cross `samples`."""
+        graphs = tuple(map(list, zip(*samples)))
+        graphs = tuple([tuple(map(dgl.batch, zip(*graph_by_type))) for graph_by_type in graphs])
+        return graphs
 
 
 def load_dataset(name='crystal_dataset', root='./crystal_dataset/', processed_dir='processed/', in_root=True):
