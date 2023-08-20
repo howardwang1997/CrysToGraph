@@ -7,11 +7,11 @@ from torch import nn, optim
 from torch_geometric import nn as tgnn
 from torch.utils.data import DataLoader
 
-from .data import crystal
-from .model.nt_xent import NTXentLoss as ntxl
-from .model.NN import ContrastivePreTraining
-from .train import GraphConvPretraining
-from .model.bert_transformer import TransformerConvLayer
+from data import crystal
+from model.nt_xent import NTXentLoss as ntxl
+from model.NN import ContrastivePreTraining
+from train import GraphConvPretraining
+from model.bert_transformer import TransformerConvLayer
 
 # make dir and get data from matbench
 try:
