@@ -50,15 +50,15 @@ pcdc.set_atom_vocab(atom_vocab)
 trainloader = DataLoader(pcdc, batch_size=batch_size, shuffle=True, collate_fn=pcdc.collate_line_graph, num_workers=10)
 ntxent_criterion = ntxl(batch_size=batch_size, temperature=0.1, use_cosine_similarity=False)
 
-arp.train(train_loader=trainloader, 
-          criterion=criterion, 
+gcp.train(train_loader=trainloader,
+          criterion=ntxent_criterion,
           optimizer=optimizer, 
           scheduler=scheduler,
-          epochs=epochs)
+          epochs=epochs,
+          verbose_freq=800)
 print('training time =', time.time()-t)
 
-_, emb = arp.get_atomic_representation()
-loss = arp.loss_list
-joblib.dump(loss, 'output/loss_arp_0.jbl')
-
-torch.save(emb, 'config/atom_representations_86_0.pt')
+loss = gcp.loss_list
+joblib.dump(loss, 'output/loss_gcp_0.jbl')
+torch.save(gcp.model.cpu(), 'config/contrastive_pretrained.pt')
+torch.save(gcp.model.state_dict(), 'config/contrastive_pretrained_sd.pt')
