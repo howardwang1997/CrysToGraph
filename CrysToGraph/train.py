@@ -138,8 +138,8 @@ class GraphConvPretraining():
                 self.data_time.update(time.time() - end)
 
                 if self.cuda:
-                    data_i = data_i[0].cuda(), data_i[1].cuda()
-                    data_j = data_j[0].cuda(), data_j[1].cuda()
+                    data_i = data_i[0].to(torch.device('cuda:0')), data_i[1].to(torch.device('cuda:0'))
+                    data_j = data_j[0].to(torch.device('cuda:0')), data_j[1].to(torch.device('cuda:0'))
 
                 outputs_i = self.model(data_i)
                 outputs_j = self.model(data_j)
@@ -187,10 +187,11 @@ class GraphConvPretraining():
 
 
 class FineTuningWithDGL():
-    def __init__(self, model, cuda=True):
+    def __init__(self, model, cuda=True, batch_size=32):
         self.batch_time = AverageRecorder()
         self.data_time = AverageRecorder()
         self.losses = AverageRecorder()
+        self.batch_size = batch_size
 
         self.cuda = cuda and torch.cuda.is_available()
         self.model = model
@@ -243,7 +244,7 @@ class FineTuningWithDGL():
                 loss = self.criterion_task(output, target)
 
                 loss_list.append(loss.data.cpu().item())
-                self.losses.update(loss.data.cpu().item(), criterion.batch_size)
+                self.losses.update(loss.data.cpu().item(), self.batch_size)
 
                 loss /= grad_accum
                 loss.backward()
