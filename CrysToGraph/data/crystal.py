@@ -459,7 +459,7 @@ class ProcessedCrystalDatasetContrastive(ProcessedDGLCrystalDataset):
         if load_data:
             self.load_all_data()
 
-        super().__init__()
+        super().__init__(root, atom_vocab, '', names,embedded, random, processed_dir, False)
 
     def __getitem__(self, idx):
         if self.load_data:
