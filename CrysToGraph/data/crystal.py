@@ -472,8 +472,9 @@ class ProcessedCrystalDatasetContrastive(ProcessedDGLCrystalDataset):
         if self.random:
             graphs.append(self.get_crystal(idx,
                                            suffix=self.suffixes[random.randint(1, len(self.suffixes)-1)]).graph)
-        for i in range(1, len(self.suffixes)):
-            graphs.append(self.get_crystal(idx, suffix=self.suffixes[i]).graph)
+        else:
+            for i in range(1, len(self.suffixes)):
+                graphs.append(self.get_crystal(idx, suffix=self.suffixes[i]).graph)
 
         return graphs
 
