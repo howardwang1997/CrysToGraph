@@ -15,13 +15,13 @@ from model.bert_transformer import TransformerConvLayer
 
 # make dir and get data from matbench
 try:
-    os.mkdir('/home/howardwang/Documents/datasets/overall/')
-    os.mkdir('/home/howardwang/Documents/datasets/overall/raw/')
-    os.mkdir('/home/howardwang/Documents/datasets/overall/processed/')
+    os.mkdir('/home/howardwang/Documents/datasets/eform/')
+    os.mkdir('/home/howardwang/Documents/datasets/eform/raw/')
+    os.mkdir('/home/howardwang/Documents/datasets/eform/processed/')
 except FileExistsError:
     pass
 
-data_root = '/home/howardwang/Documents/datasets/overall/'
+data_root = '/home/howardwang/Documents/datasets/eform/'
 atom_vocab = joblib.load('/home/howardwang/Documents/datasets/atom_vocab.jbl')
 embeddings_path = '/home/howardwang/Documents/datasets/embeddings_86_64catcgcnn.pt'
 embeddings = torch.load(embeddings_path).cuda()
