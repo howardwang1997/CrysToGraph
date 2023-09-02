@@ -12,6 +12,7 @@ from train import FineTuningWithDGL
 from model.bert_transformer import TransformerConvLayer
 from model.scheduler import WarmupMultiStepLR
 from model.NN import Finetuning
+from model.model_utils import get_finetune_model_params
 
 # make dir and get data from matbench
 try:
@@ -26,6 +27,7 @@ data_name = 'matbench_mp_e_form.json'
 
 # Read processed dataset
 atom_vocab = joblib.load('data/atom_vocab.jbl')
+checkpoint = torch.load('config/contrastive_pretrained_sd.pt')
 
 # start the pretraining
 atom_fea_len = 92
@@ -39,14 +41,15 @@ module = nn.ModuleList([TransformerConvLayer(256, 32, 8, edge_dim=76, dropout=0.
 
 batch_size = 32
 embeddings = torch.load('embeddings_84_cgcnn.pt').cuda()
-ft = Finetuning(atom_fea_len, nbr_fea_len, embeddings=embeddings, h_fea_len=256, n_conv=3, n_fc=2,
+ft = Finetuning(atom_fea_len, nbr_fea_len, embeddings=embeddings, h_fea_len=256, n_conv=3, n_fc=2, n_gt=1,
                 module=module, norm=True, drop=0.0)
 ft.embedded=True
+ft.load_state_dict(checkpoint, strict=False)
 mtcp = FineTuningWithDGL(model=ft)
 # optimizer = optim.SGD(ft.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)
-optimizer = optim.AdamW(ft.parameters(), lr=0.0001, betas=(0.9, 0.99), weight_decay=0)
+optimizer = optim.AdamW(get_finetune_model_params(ft, 1e-4, 0), lr=0.0001, betas=(0.9, 0.99), weight_decay=0)
 scheduler = WarmupMultiStepLR(optimizer, [150], gamma=0.1)
-epochs = 300
+epochs = 100
 
 mpcd = crystal.ProcessedDGLCrystalDataset(root=data_root)
 mpcd.set_atom_vocab(atom_vocab)

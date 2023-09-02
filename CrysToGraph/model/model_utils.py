@@ -55,3 +55,12 @@ def tg_batch_to_batch_edge_index(batch):
     attn_mask[start:, start:] = 1
     return batch_edge, attn_mask
 
+def get_finetune_model_params(model, lr, weight_decay):
+    params = list(model.named_parameters())
+    param_group = [
+        {'params': [p for n, p in params if not ('fc' in n or 'gts' in n)], 'weight_decay': weight_decay, 'lr': 1e-6},
+        {'params': [p for n, p in params if 'gts' in n], 'weight_decay': weight_decay, 'lr': lr},
+        {'params': [p for n, p in params if 'fc' in n], 'weight_decay': weight_decay, 'lr': lr*10}
+    ]
+
+    return param_group

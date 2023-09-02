@@ -85,7 +85,7 @@ class ContrastivePreTraining(nn.Module):
     Contrastive pre-training of convolutions.
     """
     def __init__(self, orig_atom_fea_len, nbr_fea_len,
-                atom_fea_len=64, line_fea_len=30, n_conv=3, h_fea_len=128,
+                atom_fea_len=64, line_fea_len=30, n_conv=3, h_fea_len=128, n_gt=1,
                 embeddings=None, module=None, norm=False):
         super().__init__()
         self.embeddings = embeddings
@@ -118,7 +118,7 @@ class ContrastivePreTraining(nn.Module):
         self.pe_to_hidden = nn.Linear(46, 256)
 
         self.gts = nn.Sequential(*[GlobalTransformerLayer(256, 32, 8, edge_dim=76)
-                                   for _ in range(n_conv)])
+                                   for _ in range(n_gt)])
         self.conv_sp = nn.Softplus()
 
         self.conv_to_fc = nn.Linear(h_fea_len, h_fea_len)
@@ -194,7 +194,7 @@ class Finetuning(nn.Module):
     Finetuning the model with specific tasks.
     """
     def __init__(self, orig_atom_fea_len, nbr_fea_len,
-                 atom_fea_len=64, line_fea_len=30, n_conv=3, h_fea_len=128, n_fc=3, n_gt=3,
+                 atom_fea_len=64, line_fea_len=30, n_conv=3, h_fea_len=128, n_fc=3, n_gt=1,
                  embeddings=None, module=None, norm=False, drop=0.0):
         super(Finetuning, self).__init__()
         self.embeddings = embeddings
@@ -227,7 +227,7 @@ class Finetuning(nn.Module):
         self.pe_to_hidden = nn.Linear(46, 256)
 
         self.gts = nn.Sequential(*[GlobalTransformerLayer(256, 32, 8, edge_dim=76)
-                                   for _ in range(n_conv)])
+                                   for _ in range(n_gt)])
         self.conv_sp = nn.Softplus()
 
         self.conv_to_fc = nn.Linear(h_fea_len, h_fea_len)
