@@ -16,18 +16,18 @@ from model.model_utils import get_finetune_model_params
 
 # make dir and get data from matbench
 try:
-    os.mkdir('crystal_dataset')
-    os.mkdir('crystal_dataset/raw')
-    os.mkdir('crystal_dataset/processed')
+    os.mkdir('/home/howardwang/Documents/datasets/train/')
+    os.mkdir('/home/howardwang/Documents/datasets/train/raw/')
+    os.mkdir('/home/howardwang/Documents/datasets/train/processed/')
 except FileExistsError:
     pass
 
-data_root = 'tvts_12/train/'
-data_name = 'matbench_mp_e_form.json'
+data_root = '/home/howardwang/Documents/datasets/train/'
+atom_vocab = joblib.load('config/atom_vocab.jbl')
 
 # Read processed dataset
-atom_vocab = joblib.load('data/atom_vocab.jbl')
 checkpoint = torch.load('config/contrastive_pretrained_sd.pt')
+embeddings = torch.load('embeddings_86_64catcgcnn.pt')
 
 # start the pretraining
 atom_fea_len = 92
@@ -40,7 +40,7 @@ module = nn.ModuleList([TransformerConvLayer(256, 32, 8, edge_dim=76, dropout=0.
          nn.ModuleList([TransformerConvLayer(76, 24, 8, edge_dim=30, dropout=0.0) for _ in range(3)])
 
 batch_size = 32
-embeddings = torch.load('embeddings_86_1.pt').cuda()
+embeddings = embeddings.cuda()
 ft = Finetuning(atom_fea_len, nbr_fea_len, embeddings=embeddings, h_fea_len=256, n_conv=3, n_fc=2, n_gt=1,
                 module=module, norm=True, drop=0.0)
 ft.embedded=True
@@ -48,7 +48,7 @@ ft.load_state_dict(checkpoint, strict=False)
 mtcp = FineTuningWithDGL(model=ft)
 # optimizer = optim.SGD(ft.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)
 optimizer = optim.AdamW(get_finetune_model_params(ft, 1e-4, 0), lr=0.0001, betas=(0.9, 0.99), weight_decay=0)
-scheduler = WarmupMultiStepLR(optimizer, [150], gamma=0.1)
+scheduler = WarmupMultiStepLR(optimizer, [50], gamma=0.1)
 epochs = 100
 
 mpcd = crystal.ProcessedDGLCrystalDataset(root=data_root)
@@ -64,8 +64,8 @@ mtcp.train(mixed_train_loader=trainloader,
            epochs=epochs,
            verbose_freq=700,
            grad_accum=8)
-mtcp.save_model('config/target189.tch')
-mtcp.save_state_dict('config/target189.tsd')
+mtcp.save_model('config/finetune.pt')
+mtcp.save_state_dict('config/finerune_sd.pt')
 
 print('training time =', time.time()-t)
 
@@ -73,8 +73,8 @@ print('training time =', time.time()-t)
 #EVAL starts from here
 from torch.nn import L1Loss, MSELoss
 from math import sqrt
-pcd = crystal.ProcessedDGLCrystalDataset(root='tvts_12/val/', atom_vocab=atom_vocab)
-l = joblib.load('tvts/val/labels.jbl')
+pcd = crystal.ProcessedDGLCrystalDataset(root='/home/howardwang/Documents/datasets/val/', atom_vocab=atom_vocab)
+l = joblib.load('/home/howardwang/Documents/datasets/val/labels.jbl')
 pcd.set_labels(l)
 MAE = L1Loss()
 MSE = MSELoss()
