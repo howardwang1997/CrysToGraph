@@ -40,7 +40,7 @@ module = nn.ModuleList([TransformerConvLayer(256, 32, 8, edge_dim=76, dropout=0.
          nn.ModuleList([TransformerConvLayer(76, 24, 8, edge_dim=30, dropout=0.0) for _ in range(3)])
 
 batch_size = 32
-embeddings = torch.load('embeddings_84_cgcnn.pt').cuda()
+embeddings = torch.load('embeddings_86_1.pt').cuda()
 ft = Finetuning(atom_fea_len, nbr_fea_len, embeddings=embeddings, h_fea_len=256, n_conv=3, n_fc=2, n_gt=1,
                 module=module, norm=True, drop=0.0)
 ft.embedded=True
