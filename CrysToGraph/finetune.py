@@ -87,7 +87,7 @@ model = mtcp.model
 model.eval()
 for _, data in enumerate(testloader):
     data = tuple([data[0].to(torch.device('cuda:0')), data[1].to(torch.device('cuda:0')), torch.unsqueeze(data[2], -1)])
-    out = model(data)[1].cpu()
+    out = model(data).cpu()
     mae = float(MAE(out, data[-1]))
     mse = float(MSE(out, data[-1]))
     mae_list.append(mae)
