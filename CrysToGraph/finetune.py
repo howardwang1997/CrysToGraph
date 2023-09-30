@@ -25,12 +25,15 @@ except FileExistsError:
 data_root = '/home/howardwang/Documents/datasets/train/'
 atom_vocab = joblib.load('config/atom_vocab.jbl')
 
+# process dataset, OPTIONAL
+cd = crystal.CrystalDataset(root=data_root, atom_vocab=atom_vocab)
+
 # Read processed dataset
 checkpoint = torch.load('config/contrastive_pretrained_sd.pt')
 embeddings = torch.load('embeddings_86_64catcgcnn.pt')
 
 # start the pretraining
-atom_fea_len = 92
+atom_fea_len = 156
 nbr_fea_len = 76 
 vocab_len = len(atom_vocab.numbers) # add the len attr to AtomVocab!
 
@@ -43,7 +46,6 @@ batch_size = 32
 embeddings = embeddings.cuda()
 ft = Finetuning(atom_fea_len, nbr_fea_len, embeddings=embeddings, h_fea_len=256, n_conv=3, n_fc=2, n_gt=1,
                 module=module, norm=True, drop=0.0)
-ft.embedded=True
 ft.load_state_dict(checkpoint, strict=False)
 mtcp = FineTuningWithDGL(model=ft)
 # optimizer = optim.SGD(ft.parameters(), lr=0.01, momentum=0.9, weight_decay=1e-4)

@@ -37,7 +37,6 @@ module = nn.ModuleList([TransformerConvLayer(256, 32, 8, edge_dim=76, dropout=0.
 
 cpt = ContrastivePreTraining(atom_fea_len, nbr_fea_len, embeddings=embeddings, h_fea_len=256, n_conv=3,
                              module=module, norm=True)
-cpt.embedded=True
 gcp = GraphConvPretraining(model=cpt)
 optimizer = optim.AdamW(cpt.parameters(), lr=0.0002, betas=(0.9, 0.99), weight_decay=0)
 scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [50], gamma=0.1)

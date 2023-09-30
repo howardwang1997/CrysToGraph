@@ -181,8 +181,7 @@ class ContrastivePreTraining(nn.Module):
 
     def do_mp(self, conv_n, conv_l, atom_fea, nbr_fea_idx, nbr_fea, line_fea_idx, line_fea, idx):
         nbr_fea, line_fea = conv_l(nbr_fea, line_fea_idx, line_fea)
-        atom_fea, line_fea = conv_n(atom_fea, nbr_fea_idx, nbr_fea)
-        # atom_fea, line_fea = conv_n(atom_fea, nbr_fea_idx, self.lnn[idx](nbr_fea))
+        atom_fea, nbr_fea = conv_n(atom_fea, nbr_fea_idx, nbr_fea)
         return atom_fea, nbr_fea
 
     def do_gt(self, gt_layer, atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea):
@@ -232,7 +231,6 @@ class Finetuning(nn.Module):
 
         self.conv_to_fc = nn.Linear(h_fea_len, h_fea_len)
         self.conv_to_fc_softplus = nn.Softplus()
-        self.lnns = nn.Sequential(*[nn.LayerNorm(nbr_fea_len) for _ in range(n_conv)])
         
         self.fcs = nn.ModuleList([nn.Linear(in_features=h_fea_len,
                                             out_features=h_fea_len,
@@ -306,7 +304,6 @@ class Finetuning(nn.Module):
     def do_mp(self, conv_n, conv_l, atom_fea, nbr_fea_idx, nbr_fea, line_fea_idx, line_fea, idx):
         nbr_fea, line_fea = conv_l(nbr_fea, line_fea_idx, line_fea)
         atom_fea, nbr_fea = conv_n(atom_fea, nbr_fea_idx, nbr_fea)
-        # atom_fea, line_fea = conv_n(atom_fea, nbr_fea_idx, self.lnn[idx](nbr_fea))
         return atom_fea, nbr_fea
 
     def do_gt(self, gt_layer, atom_fea, crystal_atom_idx, nbr_fea_idx, nbr_fea):
