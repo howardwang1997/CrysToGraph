@@ -1,4 +1,4 @@
-# data.py
+# train.py
 import json
 from tqdm import tqdm
 import os
