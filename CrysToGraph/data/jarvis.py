@@ -42,10 +42,10 @@ def process_jarvis_dataset(dataset, work, label, train_idx, val_idx):
     data_t, data_v = [dataset[i] for i in train_idx], [dataset[i] for i in val_idx]
     l_t, l_v = [data[label] for data in data_t], [data[label] for data in data_v]
     for i in tqdm(range(len(data_t))):
-        a = Atoms.from_dict(data_t[i])
+        a = Atoms.from_dict(data_t[i]['atoms'])
         a.write_cif(f'{work}/train/raw/{i}.cif')
     for i in tqdm(range(len(data_v))):
-        a = Atoms.from_dict(data_v[i])
+        a = Atoms.from_dict(data_v[i]['atoms'])
         a.write_cif(f'{work}/val/raw/{i}.cif')
     joblib.dump((train_idx, val_idx), f'{work}/tvs.jbl')
     joblib.dump(l_t, f'{work}/train/labels.jbl')
