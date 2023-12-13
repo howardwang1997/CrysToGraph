@@ -27,7 +27,7 @@ DATASETS_RESULTS = {
 DATASETS_MAP = {
     'jarvis_supercon': {'path': 'jarvis_datasets/jarvis_epc_data_figshare_1058.json', 'label': 'Tc'},
     'jarvis_exfoliation': {'path': 'jarvis_datasets/2dmatpedia_exfoliation.json', 'label': 'exfoliation_energy_per_atom'},
-    'jarvis_magnetization':  {'path': 'jarvis_datasets/twodmatpedia.json', 'label': 'total_magnetization'},
+    'jarvis_magnetization':  {'path': 'jarvis_datasets/twodmatpd.json', 'label': 'total_magnetization'},
     'jarvis_2d_gap':  {'path': 'jarvis_datasets/c2db_atoms.json', 'label': 'gap'},
     'jarvis_2d_e_tot':  {'path': 'jarvis_datasets/c2db_atoms.json', 'label': 'etot'},
     'jarvis_2d_e_fermi':  {'path': 'jarvis_datasets/c2db_atoms.json', 'label': 'efermi'},
