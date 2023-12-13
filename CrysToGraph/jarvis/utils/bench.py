@@ -1,4 +1,4 @@
-from jarvis_constant import DATASETS_TASKS
+from jarvis_tasks import DATASETS_TASKS
 
 
 class MatbenchBenchmarks:
