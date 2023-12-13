@@ -1,4 +1,4 @@
-from mb_utils import Task
+from tasks import Task
 
 DATASETS_LEN = {
     'jarvis_supercon': 1058,
