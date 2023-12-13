@@ -35,7 +35,7 @@ def _get_list_name(name, length, index):
 
 
 def make_splits(name, length, n_folds=5, random_seed=42):
-    kf = KFold(n_folds, random_state=random_seed)
+    kf = KFold(n_folds, random_state=random_seed, shuffle=True)
     index = list(range(length))
     dataset_split = {}
     for i, (train_index, test_index) in enumerate(kf.split(index)):
@@ -49,7 +49,7 @@ def make_validation(n_folds=5, random_seed=42, save=False):
     validation = {}
     for k, v in DATASETS_LEN.items():
         validation.update(make_splits(k, v, n_folds, random_seed))
-    metadata = {'n_split': n_folds, 'random_state': random_seed, 'shuffle': False}
+    metadata = {'n_split': n_folds, 'random_state': random_seed, 'shuffle': True}
 
     final = {'metadata': metadata, 'splits': validation}
     if save:
