@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 
-from jarvis_utils.core.atoms import Atoms
+from jarvis.core.atoms import Atoms
 from pymatgen.io.jarvis import JarvisAtomsAdaptor
 from pymatgen.core import Structure
 from sklearn.model_selection import KFold
