@@ -1,7 +1,9 @@
 # This files serves only for illustrative purposes.
 # The code used for the published results can be found in the following repo: https://github.com/ml-evs/modnet-matbench
 
-from matbench.bench import MatbenchBenchmark
+import sys
+sys.path.append('../')
+from ..utils.bench import MatbenchBenchmark
 from matbench.constants import CLF_KEY
 from modnet.preprocessing import MODData
 from modnet.featurizers.presets import DeBreuck2020Featurizer

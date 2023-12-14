@@ -1,8 +1,8 @@
 from jarvis_tasks import DATASETS_TASKS
 
 
-class MatbenchBenchmarks:
-    def __init__(self):
+class MatbenchBenchmark:
+    def __init__(self, **kwargs):
         pass
 
     @property

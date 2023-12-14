@@ -7,7 +7,9 @@ import h5py
 import json
 from multiprocessing import Pool
 
-from matbench.bench import MatbenchBenchmark
+import sys
+sys.path.append('../')
+from ..utils.bench import MatbenchBenchmark
 from pymatgen.core.structure import Structure
 from networkx import MultiDiGraph
 from graphlist import GraphList, HDFGraphList

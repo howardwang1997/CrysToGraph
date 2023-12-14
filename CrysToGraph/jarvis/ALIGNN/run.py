@@ -15,13 +15,15 @@ from jarvis.core.atoms import pmg_to_atoms
 from jarvis.db.jsonutils import dumpjson, loadjson
 from sklearn.metrics import mean_absolute_error, roc_auc_score
 
-from matbench.bench import MatbenchBenchmark
+import sys
+sys.path.append('../')
+from ..utils.bench import MatbenchBenchmark
 from matbench.constants import CLF_KEY
 
 mb = MatbenchBenchmark(
-    autoload=False,
-    subset=[
-        "matbench_jdft2d",
+    # autoload=False,
+    # subset=[
+    #     "matbench_jdft2d",
         # "matbench_dielectric",
         # "matbench_phonons",
         # "matbench_perovskites",
@@ -30,7 +32,7 @@ mb = MatbenchBenchmark(
         # "matbench_mp_e_form",
         # "matbench_mp_gap",
         # "matbench_mp_is_metal",
-    ],
+    # ],
 )
 
 
