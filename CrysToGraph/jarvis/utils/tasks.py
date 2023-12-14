@@ -1,5 +1,6 @@
 import json
 import torch
+import numpy as np
 from torch.nn import L1Loss, MSELoss
 
 from jarvis_constant import DATASETS_LEN, DATASETS_RESULTS
@@ -37,6 +38,15 @@ class Task:
 
     def record(self, fold, predictions):
         predictions = torch.tensor(predictions).view(-1)
+
+        fold_key = self.folds_map[fold]
+        keys = self.splits[fold_key]['test']
+        test_outputs = torch.tensor(self.outputs[keys]).view(-1)
+        mae = L1Loss()(predictions, test_outputs).item()
+        mse = MSELoss()(predictions, test_outputs).item()
+        rmse = np.sqrt(mse)
+        print(f'TASK {self.dataset_name} FOLD {fold} RESULTS: MAE = {mae:.4f}, RMSE = {rmse:.4f}')
+
         predictions = predictions.tolist()
         try:
             with open('jarvis_MB_results.json') as f:
