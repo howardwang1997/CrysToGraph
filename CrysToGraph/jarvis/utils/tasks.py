@@ -1,5 +1,6 @@
 import json
 import torch
+from torch.nn import L1Loss, MSELoss
 
 from jarvis_constant import DATASETS_LEN, DATASETS_RESULTS
 from jarvis_utils import load_dataset
