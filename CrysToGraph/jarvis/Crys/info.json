@@ -1,0 +1,8 @@
+{
+  "authors": "Wang Hongyi",
+  "algorithm": "CrysToGraph",
+  "algorithm_long": "Crystals with Transformers on Graph, v5.3.4.",
+  "bibtex_refs": "",
+  "notes": "Please setup environment with the .yml file before running main.py. ",
+  "requirements": {}
+}

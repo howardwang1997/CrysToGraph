@@ -13,22 +13,22 @@ from pymatgen.core import Composition
 USE_GA = True # whether to use the GA or fit_preset (dynamic grid-search) for hyper-paremeter optimization.
 
 mb = MatbenchBenchmark(
-    autoload=False, 
-    subset=[
-        'matbench_dielectric', 
-        'matbench_jdft2d', 
-        'matbench_steels', 
-        'matbench_expt_gap', 
-        'matbench_phonons',
-        'matbench_log_gvrh',
-        'matbench_log_kvrh',
-        'matbench_glass', 
-        'matbench_expt_is_metal',
-        'matbench_perovskites', # for the bigger tasks, USE_GA=True is recommended, as training time scales better with larger training sets
-        'matbench_mp_e_form',
-        'matbench_mp_gap',
-        'matbench_mp_is_metal',
-    ],
+    # autoload=False,
+    # subset=[
+    #     'matbench_dielectric',
+    #     'matbench_jdft2d',
+    #     'matbench_steels',
+    #     'matbench_expt_gap',
+    #     'matbench_phonons',
+    #     'matbench_log_gvrh',
+    #     'matbench_log_kvrh',
+    #     'matbench_glass',
+    #     'matbench_expt_is_metal',
+    #     'matbench_perovskites', # for the bigger tasks, USE_GA=True is recommended, as training time scales better with larger training sets
+    #     'matbench_mp_e_form',
+    #     'matbench_mp_gap',
+    #     'matbench_mp_is_metal',
+    # ],
 )
 
 for task in mb.tasks:
