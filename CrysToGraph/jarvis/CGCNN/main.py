@@ -8,7 +8,9 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from torch_geometric import nn as tgnn
 
-from matbench.bench import MatbenchBenchmark
+import sys
+sys.path.append('..')
+from ..utils.bench import MatbenchBenchmark
 
 from data import CrystalDataset
 from train import Trainer

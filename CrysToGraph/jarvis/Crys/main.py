@@ -7,7 +7,9 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 
-from matbench.bench import MatbenchBenchmark
+import sys
+sys.path.append('..')
+from ..utils.bench import MatbenchBenchmark
 
 from data import CrystalDataset
 from train import Trainer
