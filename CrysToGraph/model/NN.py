@@ -223,7 +223,7 @@ class Finetuning(nn.Module):
                 self.convs, self.line_convs = module
             else:
                 self.convs = module
-        self.pe_to_hidden = nn.Linear(46, 256)
+        self.pe_to_hidden = nn.Linear(40, 256)
 
         self.gts = nn.Sequential(*[GlobalTransformerLayer(256, 32, 8, edge_dim=76)
                                    for _ in range(n_gt)])

@@ -592,7 +592,7 @@ def structure2dglgraph(structure, atom_vocab, embedding=False, max_nbr=12, max_r
     graph.ndata['atom_features'] = atom_emb
     graph.edata['spherical'] = convert_spherical(graph.edata['r'])
 
-    graph.ndata['pe'] = torch.cat([pos, frac, lpe(graph, 20), rwpe(graph, 20)], dim=-1)
+    graph.ndata['pe'] = torch.cat([lpe(graph, 20), rwpe(graph, 20)], dim=-1)
     graph.edata.pop('r')
 
     lg.edata['h'] = torch.nan_to_num(lg.edata['h'], 0.0)
