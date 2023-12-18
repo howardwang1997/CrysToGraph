@@ -28,12 +28,12 @@ def make_dir(work):
             print(f'{path} exists.')
 
 
-def split_dataset(dataset, ratio=0.9):
+def split_dataset(dataset, ratio=0.9, seed=42):
     length = len(dataset)
-    all_data = [i for i in range(length)]
-    t = int(length * ratio)
-    train = random.sample(all_data, t)
-    val = [i for i in all_data if i not in train]
+    len_train = int(length * ratio)
+    random.seed(seed)
+    random.shuffle(dataset)
+    train, val = dataset[:len_train], dataset[len_train:]
 
     return train, val
 
@@ -59,6 +59,7 @@ def main():
     parser.add_argument('--label', type=str, help='label name')
     parser.add_argument('--ratio', type=float, default=0.9, help='ratio of train set')
     parser.add_argument('--split', type=str, help='path to split file')
+    parser.add_argument('--random_seed', type=int, help='random seed for dataset split', default=42)
     args = parser.parse_args()
 
     with open(args.dataset) as f:
@@ -68,7 +69,7 @@ def main():
     if args.split:
         train_idx, val_idx = joblib.load(args.split)
     else:
-        train_idx, val_idx = split_dataset(dataset, args.ratio)
+        train_idx, val_idx = split_dataset(dataset, args.ratio, args.random_seed)
 
     process_jarvis_dataset(dataset, args.work, args.label, train_idx, val_idx)
 
