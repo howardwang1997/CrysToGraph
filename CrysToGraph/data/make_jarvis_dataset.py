@@ -43,19 +43,40 @@ def process_jarvis_dataset(dataset, work, label, train_idx, val_idx, label_2='')
     second_label = False
     data_t, data_v = [dataset[i] for i in train_idx], [dataset[i] for i in val_idx]
     l_t, l_v = [data[label] for data in data_t], [data[label] for data in data_v]
+    error_idx_t, error_idx_v = [], []
     if label_2 != '':
         second_label = True
         l2_t, l2_v = [data[label_2] for data in data_t], [data[label_2] for data in data_v]
     for i in tqdm(range(len(data_t))):
-        a = Atoms.from_dict(data_t[i]['atoms'])
-        a.write_cif(f'{work}/train/raw/{i}.cif')
+        try:
+            a = Atoms.from_dict(data_t[i]['atoms'])
+            a.write_cif(f'{work}/train/raw/{i}.cif')
+        except TypeError:
+            error_idx_t.append(i)
     for i in tqdm(range(len(data_v))):
-        a = Atoms.from_dict(data_v[i]['atoms'])
-        a.write_cif(f'{work}/val/raw/{i}.cif')
+        try:
+            a = Atoms.from_dict(data_v[i]['atoms'])
+            a.write_cif(f'{work}/val/raw/{i}.cif')
+        except TypeError:
+            error_idx_v.append(i)
     joblib.dump((train_idx, val_idx), f'{work}/tvs.jbl')
+    print(f'{len(error_idx_t)} samples in train and {len(error_idx_v)} samples in val not converted!')
+
+    joblib.dump(error_idx_t, f'{work}/train/error_samples.jbl')
+    joblib.dump(error_idx_v, f'{work}/val/error_samples.jbl')
+    error_idx_t.sort(reverse=True)
+    error_idx_v.sort(reverse=True)
+    for i in error_idx_t:
+        l_t.pop(i)
+    for i in error_idx_v:
+        l_v.pop(i)
     joblib.dump(l_t, f'{work}/train/labels.jbl')
     joblib.dump(l_v, f'{work}/val/labels.jbl')
     if second_label:
+        for i in error_idx_t:
+            l2_t.pop(i)
+        for i in error_idx_v:
+            l2_v.pop(i)
         joblib.dump(l2_t, f'{work}/train/labels_2.jbl')
         joblib.dump(l2_v, f'{work}/val/labels_2.jbl')
 
