@@ -82,5 +82,5 @@ def main():
     process_jarvis_dataset(dataset, args.work, args.label, train_idx, val_idx, label_2=args.label_2)
 
 
-if __name__ == '__name__':
+if __name__ == '__main__':
     main()
