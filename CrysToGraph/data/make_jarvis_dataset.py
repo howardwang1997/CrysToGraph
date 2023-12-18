@@ -32,10 +32,11 @@ def split_dataset(dataset, ratio=0.9, seed=42):
     length = len(dataset)
     len_train = int(length * ratio)
     random.seed(seed)
-    random.shuffle(dataset)
-    train, val = dataset[:len_train], dataset[len_train:]
+    all_idx = list(range(len(dataset)))
+    random.shuffle(all_idx)
+    train_idx, val_idx = all_idx[:len_train], all_idx[len_train:]
 
-    return train, val
+    return train_idx, val_idx
 
 
 def process_jarvis_dataset(dataset, work, label, train_idx, val_idx, label_2=''):
