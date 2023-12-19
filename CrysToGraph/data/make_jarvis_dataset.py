@@ -4,6 +4,7 @@ import random
 from tqdm import tqdm
 import joblib
 import argparse
+import shutil
 
 from jarvis.core.atoms import Atoms
 
@@ -81,6 +82,21 @@ def process_jarvis_dataset(dataset, work, label, train_idx, val_idx, label_2='')
         joblib.dump(l2_v, f'{work}/val/labels_2.jbl')
 
 
+def remove_errors(raw_path, error_samples):
+    if raw_path[-1] == '/':
+        raw_path = raw_path[:-1]
+    total_length = os.listdir(raw_path)
+    accumulate = 0
+
+    for i in tqdm(range(len(total_length))):
+        if i in error_samples:
+            accumulate += 1
+        if accumulate == 0:
+            continue
+        else:
+            shutil.copy(f'{raw_path}/{i}.cif', f'{raw_path}/{i-accumulate}.cif')
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('dataset', type=str, help='dataset to be processed, must be jarvis dataset.')
@@ -102,6 +118,8 @@ def main():
         train_idx, val_idx = split_dataset(dataset, args.ratio, args.random_seed)
 
     process_jarvis_dataset(dataset, args.work, args.label, train_idx, val_idx, label_2=args.label_2)
+    remove_errors(f'{args.work}/train/raw', joblib.load(f'{args.work}/train/error_samples.jbl'))
+    remove_errors(f'{args.work}/val/raw', joblib.load(f'{args.work}/val/error_samples.jbl'))
 
 
 if __name__ == '__main__':
