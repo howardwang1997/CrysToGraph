@@ -85,16 +85,18 @@ def process_jarvis_dataset(dataset, work, label, train_idx, val_idx, label_2='')
 def remove_errors(raw_path, error_samples):
     if raw_path[-1] == '/':
         raw_path = raw_path[:-1]
-    total_length = os.listdir(raw_path)
+    total_length = len(os.listdir(raw_path))
     accumulate = 0
 
-    for i in tqdm(range(len(total_length))):
+    for i in tqdm(range(total_length)):
         if i in error_samples:
             accumulate += 1
         if accumulate == 0:
             continue
         else:
             shutil.copy(f'{raw_path}/{i}.cif', f'{raw_path}/{i-accumulate}.cif')
+    for i in range(len(error_samples)):
+        os.remove(f'{raw_path}/{total_length-1-i}.cif')
 
 
 def main():
