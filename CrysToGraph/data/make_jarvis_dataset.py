@@ -91,7 +91,7 @@ def remove_errors(raw_path, error_samples):
     for i in tqdm(range(total_length)):
         if i in error_samples:
             accumulate += 1
-        if accumulate == 0:
+        elif accumulate == 0:
             continue
         else:
             shutil.copy(f'{raw_path}/{i}.cif', f'{raw_path}/{i-accumulate}.cif')
