@@ -1,9 +1,10 @@
-from jarvis_tasks import DATASETS_TASKS
+from .jarvis_tasks import DATASETS_TASKS
 
 
 class MatbenchBenchmark:
     def __init__(self, **kwargs):
-        pass
+        for k in DATASETS_TASKS.keys():
+            setattr(self, k, DATASETS_TASKS[k])
 
     @property
     def tasks(self):

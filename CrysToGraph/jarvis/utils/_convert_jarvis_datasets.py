@@ -1,7 +1,7 @@
 import json
 
-from jarvis_constant import DATASETS_MAP
-from jarvis_utils import jarvis_dataset_to_mp, make_validation
+from .jarvis_constant import DATASETS_MAP
+from .jarvis_utils import jarvis_dataset_to_mp, make_validation
 
 
 def main():

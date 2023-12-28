@@ -3,8 +3,8 @@ import torch
 import numpy as np
 from torch.nn import L1Loss, MSELoss
 
-from jarvis_constant import DATASETS_LEN, DATASETS_RESULTS
-from jarvis_utils import load_dataset
+from .jarvis_constant import DATASETS_LEN, DATASETS_RESULTS
+from .jarvis_utils import load_dataset
 
 
 class Task:
@@ -69,7 +69,10 @@ class Task:
         keys = self.splits[fold_key]['train']
         return self.inputs[keys], self.outputs[keys]
 
-    def get_test_data(self, fold):
+    def get_test_data(self, fold, include_target=False):
         fold_key = self.folds_map[fold]
         keys = self.splits[fold_key]['test']
-        return self.inputs[keys], self.outputs[keys]
+        if include_target:
+            return self.inputs[keys], self.outputs[keys]
+        else:
+            return self.inputs[keys]

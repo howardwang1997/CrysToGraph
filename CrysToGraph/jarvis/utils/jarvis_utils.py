@@ -5,7 +5,7 @@ from jarvis.core.atoms import Atoms
 from pymatgen.io.jarvis import JarvisAtomsAdaptor
 from pymatgen.core import Structure
 from sklearn.model_selection import KFold
-from jarvis_constant import DATASETS_LEN
+from .jarvis_constant import DATASETS_LEN
 
 
 def jarvis_dataset_to_mp(dataset, label, name, save=False):
@@ -60,8 +60,8 @@ def make_validation(n_folds=5, random_seed=42, save=False):
 
 def load_dataset(dataset, name):
     data = [Structure.from_dict(d[0]) for d in dataset['data']]
-    labels = [d[1] for d in dataset]
-    length = len(dataset)
+    labels = [d[1] for d in dataset['data']]
+    length = len(data)
     index = list(range(length))
 
     all_names = _get_list_name(name, length, index)
