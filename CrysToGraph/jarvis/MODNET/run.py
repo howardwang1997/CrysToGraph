@@ -32,6 +32,7 @@ mb = MatbenchBenchmark(
 )
 
 for task in mb.tasks:
+    print(task.dataset_name)
     task.load()
     
     if task.metadata.task_type == CLF_KEY:

@@ -94,6 +94,7 @@ def train_procedure(model_cfg, crystal_preprocessor, matbench_datasets_subset,
     mb = MatbenchBenchmark(subset=matbench_datasets_subset, autoload=False)
 
     for task in mb.tasks:
+        print(task.dataset_name)
         # Returns file path to preprocessed crystals.
         # If crystals aren't preprocessed yet with the given preprocessor, the file is creates first.
         # Preprocessing a crystal may take a while.
@@ -188,9 +189,10 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         matbench_datasets_subset = sys.argv[1:]
     else:
-        matbench_datasets_subset = ["matbench_mp_e_form", "matbench_mp_gap", "matbench_mp_is_metal", "matbench_perovskites",
-            "matbench_log_kvrh", "matbench_log_gvrh", "matbench_dielectric", "matbench_phonons",
-            "matbench_jdft2d"]
+        # matbench_datasets_subset = ["matbench_mp_e_form", "matbench_mp_gap", "matbench_mp_is_metal", "matbench_perovskites",
+        #     "matbench_log_kvrh", "matbench_log_gvrh", "matbench_dielectric", "matbench_phonons",
+        #     "matbench_jdft2d"]
+        matbench_datasets_subset = list(DATASETS_TASKS.keys())
 
     model_name = 'coNGN'
 

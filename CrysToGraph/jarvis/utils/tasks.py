@@ -1,10 +1,17 @@
 import json
 import torch
 import numpy as np
+import pandas as pd
 from torch.nn import L1Loss, MSELoss
 
 from .jarvis_constant import DATASETS_LEN, DATASETS_RESULTS
 from .jarvis_utils import load_dataset
+
+
+class DotDict(dict):
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
 
 class Task:
@@ -27,6 +34,7 @@ class Task:
             'url': 'TBA',
             'hash': 'TBA'
         }
+        self.metadata = DotDict(self.metadata)
         self.folds_map = {0: 'fold_0', 1: 'fold_1', 2: 'fold_2', 3: 'fold_3', 4: 'fold_4'}
         self.folds = list(range(5))
         self.folds_nums = list(range(5))
@@ -64,15 +72,21 @@ class Task:
         with open('jarvis_datasets/metadata_validation.json') as f:
             self.splits = json.load(f)['splits'][self.dataset_name]
 
-    def get_train_and_val_data(self, fold):
+    def get_train_and_val_data(self, fold, as_type='tuple'):
         fold_key = self.folds_map[fold]
         keys = self.splits[fold_key]['train']
-        return self.inputs[keys], self.outputs[keys]
+        if as_type == 'tuple':
+            return self.inputs[keys], self.outputs[keys]
+        elif as_type == 'df':
+            return pd.concat([self.inputs[keys], self.outputs[keys]], axis=1)
 
-    def get_test_data(self, fold, include_target=False):
+    def get_test_data(self, fold, include_target=False, as_type='tuple'):
         fold_key = self.folds_map[fold]
         keys = self.splits[fold_key]['test']
         if include_target:
-            return self.inputs[keys], self.outputs[keys]
+            if as_type == 'tuple':
+                return self.inputs[keys], self.outputs[keys]
+            elif as_type == 'df':
+                return pd.concat([self.inputs[keys], self.outputs[keys]], axis=1)
         else:
             return self.inputs[keys]
