@@ -17,7 +17,7 @@ from sklearn.metrics import mean_absolute_error, roc_auc_score
 
 import sys
 sys.path.append('../')
-from ..utils.bench import MatbenchBenchmark
+from utils.bench import MatbenchBenchmark
 from matbench.constants import CLF_KEY
 
 mb = MatbenchBenchmark(

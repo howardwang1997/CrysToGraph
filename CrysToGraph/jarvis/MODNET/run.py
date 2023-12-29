@@ -3,7 +3,7 @@
 
 import sys
 sys.path.append('../')
-from ..utils.bench import MatbenchBenchmark
+from utils.bench import MatbenchBenchmark
 from matbench.constants import CLF_KEY
 from modnet.preprocessing import MODData
 from modnet.featurizers.presets import DeBreuck2020Featurizer

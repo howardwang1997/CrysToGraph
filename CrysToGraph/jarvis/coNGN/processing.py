@@ -9,7 +9,7 @@ from multiprocessing import Pool
 
 import sys
 sys.path.append('../')
-from ..utils.bench import MatbenchBenchmark
+from utils.bench import MatbenchBenchmark
 from pymatgen.core.structure import Structure
 from networkx import MultiDiGraph
 from graphlist import GraphList, HDFGraphList

@@ -12,7 +12,7 @@ import tensorflow.keras as ks
 
 import sys
 sys.path.append('../')
-from ..utils.bench import MatbenchBenchmark
+from utils.bench import MatbenchBenchmark
 from graphlist import GraphList, HDFGraphList
 from kgcnn.literature.coGN import make_model, model_default, model_default_nested
 from kgcnn.crystal.preprocessor import KNNUnitCell, KNNAsymmetricUnitCell, CrystalPreprocessor, VoronoiAsymmetricUnitCell
