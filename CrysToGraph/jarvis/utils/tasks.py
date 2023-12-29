@@ -15,7 +15,7 @@ class DotDict(dict):
 
 
 class Task:
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
         self.benchmark_name = 'matbench_v0.1'
         self.dataset_name = name
         self.metadata = {
@@ -44,7 +44,7 @@ class Task:
         self.loaded = False
         self.inputs = self.outputs = self.splits = None
 
-    def record(self, fold, predictions):
+    def record(self, fold, predictions, **kwargs):
         predictions = torch.tensor(predictions).view(-1)
 
         fold_key = self.folds_map[fold]
