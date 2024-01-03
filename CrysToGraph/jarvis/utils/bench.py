@@ -10,11 +10,11 @@ class MatbenchBenchmark:
     def tasks(self):
         return DATASETS_TASKS.values()
 
-    def from_preset(self, name):
+    def from_preset(self, name, **kwargs):
         return self
 
-    def add_metadata(self, metadata):
+    def add_metadata(self, metadata, **kwargs):
         return 0
 
-    def to_file(self, path):
+    def to_file(self, path, **kwargs):
         return 0
